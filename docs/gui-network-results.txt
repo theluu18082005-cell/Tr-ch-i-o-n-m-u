@@ -1,0 +1,17 @@
+[14:58:58] Server TCP đang nghe 0.0.0.0:39495
+[14:58:58] Dữ liệu: /tmp/gui-network-test-728603300199477455
+[14:58:58] Mỗi lượt 15 giây; không giới hạn số lượt. Ctrl+C để dừng server.
+[14:58:58] bob đã đăng nhập
+[14:58:58] alice đã đăng nhập
+[14:58:58] carol đã đăng nhập
+PASS GUI TCP Ba cửa sổ đăng ký và cùng thấy danh sách online
+PASS GUI TCP Đối thủ hiển thị lời mời
+[14:58:59] Bắt đầu trận a7264878-ad79-47b0-b887-911d7427cd0b | alice - bob
+PASS GUI TCP Hai cửa sổ vào phòng và nhận lượt
+[14:58:59] Kết thúc trận a7264878-ad79-47b0-b887-911d7427cd0b | thắng: bob | SOLVED
+PASS GUI TCP Gửi bằng nút thật cập nhật kết quả thắng thua trên hai cửa sổ
+PASS GUI TCP Lịch sử hiển thị dự đoán chính xác 6/6
+[14:58:59] Bắt đầu trận b670502f-5eb5-49cb-83ab-ea016b2bf9ad | bob - alice
+PASS GUI TCP Nút Chơi lại tạo trận mới và xóa bảng lượt cũ
+PASS GUI TCP Client thứ ba vẫn kết nối tại sảnh
+GUI TCP checks passed

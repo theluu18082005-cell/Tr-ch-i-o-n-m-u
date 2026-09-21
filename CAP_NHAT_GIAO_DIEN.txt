@@ -1,0 +1,25 @@
+COLOR DUEL 1.1 - GIAO DIEN MOI
+
+Ban nay co hinh minh hoa dau truong sac mau, giao dien xanh dem,
+the nguoi choi co avatar, o mau hieu ung khoi va dong ho vong tron.
+Anh duoc dong goi trong JAR, khong can Internet de tai anh khi choi.
+
+CACH CHUYEN TU BAN CU VA GIU TAI KHOAN
+
+1. Dong cac cua so client va dung server cu.
+2. Giai nen ban ZIP moi vao mot thu muc rieng.
+3. Sao chep thu muc data cua ban cu sang thu muc ColorDuel cua ban moi.
+   File data/state.bin chua tai khoan, diem va lich su cua nhom.
+4. Mo demo-1may.bat de thu 1 server va 3 client tren cung may.
+5. Dang nhap bang tai khoan da tao. IP 127.0.0.1, cong 5000.
+
+Chay nhieu may: mo run-server.bat tren may server, run-client.bat
+tren cac may con lai va nhap IPv4 cua server nhu ban truoc.
+
+MA NGUON GIAO DIEN
+src/main/java/vn/ptit/colorgame/GameClient.java
+src/main/java/vn/ptit/colorgame/GameTheme.java
+src/main/resources/images/color-arena.png
+
+Muon sua giao dien: sua ma nguon va chay build.bat de cap nhat JAR.
+Doc HUONG_DAN.html de xem huong dan day du bang tieng Viet co dau.

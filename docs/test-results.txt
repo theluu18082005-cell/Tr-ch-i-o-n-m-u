@@ -1,0 +1,87 @@
+PASS Wire giữ đúng UTF-8 và ranh giới trường
+PASS Đọc được nhiều thông điệp ghép chung TCP
+PASS Từ chối thông điệp quá dài
+PASS Kiểm tra đủ sáu màu, không lặp và không có màu lạ
+PASS Chấm đúng ví dụ 2 vị trí trong đề
+PASS Đủ 720 hoán vị của sáu màu
+[19:49:31] Server TCP đang nghe 0.0.0.0:44833
+[19:49:31] Dữ liệu: /tmp/color-duel-test-17802546839763155272
+[19:49:31] Mỗi lượt 15 giây; không giới hạn số lượt. Ctrl+C để dừng server.
+[19:49:31] alice đã đăng nhập
+[19:49:31] bob đã đăng nhập
+[19:49:31] carol đã đăng nhập
+PASS Ba client đăng ký và lưu tài khoản
+PASS Mật khẩu được lưu bằng PBKDF2 với salt
+PASS Chặn đăng nhập trùng tài khoản trên hai máy
+PASS Từ chối sai tài khoản hoặc mật khẩu
+PASS Ngăn hai server cùng ghi một thư mục dữ liệu
+PASS Mời, từ chối và chặn lời mời chồng chéo
+PASS Hai client nhận cùng phòng, không chứa dãy bí mật
+PASS ROOM chỉ có mã phòng và hai tài khoản
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lượt thật bắt đầu với thời lượng 15 giây
+[19:49:31] Bắt đầu trận 9d026d02-1957-4155-a8d4-613e8085365a | alice - bob
+PASS Không ghi nhận dự đoán sai lượt, sai phòng hoặc lặp màu
+PASS Hai máy nhận cùng dự đoán và đúng số vị trí
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Gửi trùng không tính hai lượt, sau đó đổi người chơi
+PASS Hết 15 giây tự động ghi lượt bỏ qua và đồng bộ hai máy
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lịch sử đồng bộ trong quá trình suy luận
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lịch sử đồng bộ trong quá trình suy luận
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lịch sử đồng bộ trong quá trình suy luận
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lịch sử đồng bộ trong quá trình suy luận
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lịch sử đồng bộ trong quá trình suy luận
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Lịch sử đồng bộ trong quá trình suy luận
+PASS Đoán đúng sáu vị trí kết thúc trận và công bố đúng người thắng
+PASS Có thể giải trận chỉ bằng các phản hồi công khai
+PASS Cộng đúng 1 điểm và cập nhật số trận cho cả hai
+[19:49:46] Kết thúc trận 9d026d02-1957-4155-a8d4-613e8085365a | thắng: bob | SOLVED
+PASS Bảng xếp hạng ưu tiên điểm giảm dần
+PASS Chỉ một người đồng ý chưa bắt đầu chơi lại
+PASS Số lượt, người đến lượt và thời gian giống nhau
+[19:49:46] Bắt đầu trận 73f988fb-52ba-4aa3-98fd-560e3d57020f | bob - alice
+PASS Hai người đồng ý tạo ván mới và lịch sử mới
+[19:49:46] Kết thúc trận 73f988fb-52ba-4aa3-98fd-560e3d57020f | thắng: bob | LEFT
+PASS Chủ động thoát bị tính thua
+PASS Hai client nhận cùng phòng, không chứa dãy bí mật
+PASS ROOM chỉ có mã phòng và hai tài khoản
+[19:49:46] Bắt đầu trận f477716e-347f-4323-92e4-35a97a92625d | alice - carol
+PASS Số lượt, người đến lượt và thời gian giống nhau
+[19:49:46] Kết thúc trận f477716e-347f-4323-92e4-35a97a92625d | thắng: alice | DISCONNECTED
+PASS Đóng socket xử thua người mất kết nối
+[19:49:46] carol đã ngắt kết nối
+[19:49:46] carol đã đăng nhập
+[19:49:46] Bắt đầu trận b877fd20-cdd8-4bbb-9f92-bb6b423fcdd4 | alice - carol
+PASS Hai client nhận cùng phòng, không chứa dãy bí mật
+PASS ROOM chỉ có mã phòng và hai tài khoản
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Heartbeat phát hiện kết nối im lặng dù chưa có TCP FIN
+[19:49:48] Kết thúc trận b877fd20-cdd8-4bbb-9f92-bb6b423fcdd4 | thắng: alice | DISCONNECTED
+[19:49:48] carol đã ngắt kết nối
+[19:49:48] Bắt đầu trận 0cfe1071-6103-4ca4-b4eb-0c6384ab0643 | alice - bob
+PASS Hai client nhận cùng phòng, không chứa dãy bí mật
+PASS ROOM chỉ có mã phòng và hai tài khoản
+PASS Số lượt, người đến lượt và thời gian giống nhau
+[19:49:48] Kết thúc trận 0cfe1071-6103-4ca4-b4eb-0c6384ab0643 | thắng: bob | SOLVED
+PASS Đoán thắng và thoát đồng thời vẫn chỉ ghi một kết quả
+[19:49:48] Bắt đầu trận 6bca7e06-ca83-45c6-b17c-292a749c2cc1 | alice - bob
+PASS Hai client nhận cùng phòng, không chứa dãy bí mật
+PASS ROOM chỉ có mã phòng và hai tài khoản
+PASS Số lượt, người đến lượt và thời gian giống nhau
+PASS Xem được lịch sử trận từ server
+PASS Xuất CSV gồm tài khoản, trận đấu và lịch sử hết giờ
+[19:49:48] Server TCP đang nghe 0.0.0.0:38307
+[19:49:48] Dữ liệu: /tmp/color-duel-recovery-10512582498168256232
+[19:49:48] Mỗi lượt 15 giây; không giới hạn số lượt. Ctrl+C để dừng server.
+PASS Khôi phục sau server sự cố: giữ dữ liệu, hủy ván dở, không cộng điểm oan
+[19:49:48] alice đã đăng nhập
+PASS Đăng nhập lại bằng tài khoản đã lưu sau khởi động server
+PASS Thứ tự phụ: trận thắng giảm dần, sau đó tổng số trận giảm dần
+ALL PASSED: 61 checks
+Temporary test data: /tmp/color-duel-test-17802546839763155272

@@ -1,0 +1,15 @@
+PASS packaged JAR executable manifest
+PASS packaged server starts on ephemeral port
+PASS split and coalesced TCP frames
+PASS CSV Unicode color names and timeout records
+PASS Windows script CRLF line endings
+PASS project XML and offline HTML local links
+Windows batch execution and physical LAN remain to be verified by the team.
+
+UI refresh 2026-09-21
+PASS packaged artwork bytes match source PNG
+PASS GameTheme compiled into executable JAR
+PASS obsolete UI classes removed from build
+PASS seven UI checks and seven GUI TCP checks against JAR
+PASS screenshots inspected at normal and compact sizes
+PASS server/protocol/data sources identical to prior release

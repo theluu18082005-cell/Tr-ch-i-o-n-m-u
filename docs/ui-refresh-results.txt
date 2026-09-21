@@ -1,0 +1,8 @@
+PASS UI Hình minh họa tải được từ resource trong chương trình
+PASS UI Chưa chọn đủ màu thì chưa được gửi
+PASS UI Đủ sáu màu và đúng lượt thì được gửi
+PASS UI Bấm hai ô đổi thứ tự màu
+PASS UI Khóa chọn màu và gửi khi đối thủ đến lượt
+PASS UI Kết thúc khóa bàn và mở nút chơi lại
+PASS UI Ván mới xóa lịch sử hiện tại
+UI checks passed; images: /workspace/scratch/a87410c5eaa0/ColorDuel/build/ui-check

@@ -1,0 +1,182 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hướng dẫn chạy game đoán dãy màu đối kháng online</title><style>
+:root{color-scheme:light;--ink:#1b2b41;--muted:#52647b;--teal:#007074;--line:#dae2ed}
+*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:var(--ink);font:16px/1.75 "Segoe UI",Arial,sans-serif}
+.shell{display:grid;grid-template-columns:230px minmax(0,1020px);gap:36px;max-width:1380px;margin:auto;padding:40px 28px}
+nav{position:sticky;top:26px;align-self:start;font-size:13px;max-height:92vh;overflow:auto;padding:14px 0}nav strong{font-size:19px;display:block;margin-bottom:16px;letter-spacing:1px}
+nav a{display:block;padding:5px 0;text-decoration:none;color:var(--muted)}nav a:hover{color:var(--teal)}main{min-width:0;background:white;padding:44px 48px;border:1px solid var(--line);border-radius:10px}
+h1{font-size:34px;line-height:1.3;margin:0 0 24px;font-weight:700;letter-spacing:-.5px}h2{font-size:25px;margin:42px 0 14px;padding-top:10px;border-top:1px solid var(--line);scroll-margin-top:20px}h3{font-size:19px;margin:26px 0 10px}
+p{margin:12px 0 18px}a{color:var(--teal);text-underline-offset:3px}li{padding-left:4px;margin:7px 0}ul,ol{padding-left:24px}
+code{font:14px/1.65 Consolas,"Courier New",monospace;background:#eef3f8;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}pre{background:#172b42;color:#e7f2ff;border-radius:7px;padding:18px 20px;overflow-x:auto}pre code{background:none;color:inherit;padding:0;white-space:pre;overflow-wrap:normal}
+.table-wrap{overflow-x:auto;margin:18px 0 24px}table{width:100%;border-collapse:collapse;font-size:14px;line-height:1.65}th,td{border:1px solid var(--line);text-align:left;vertical-align:top;padding:11px 13px}th{background:#eaf0f7;font-weight:600}tr:nth-child(even) td{background:#f8fafc}img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:6px;margin:18px 0}footer{margin-top:32px;color:var(--muted);font-size:12px}
+@media(max-width:1000px){.shell{display:block;padding:16px}nav{position:static;max-height:none;margin-bottom:22px}nav a{display:inline-block;margin-right:18px}main{padding:24px}h1{font-size:28px}}
+@media print{body{background:white;font-size:11pt}.shell{display:block;padding:0;max-width:none}nav{display:none}main{border:0;padding:0}h1{font-size:24pt}h2{font-size:17pt;page-break-after:avoid}pre{background:#f4f4f4;color:black;white-space:pre-wrap}table{font-size:10pt}tr{break-inside:avoid}a{color:black}img{max-height:600px;object-fit:contain}}
+</style></head><body><div class="shell"><nav><strong>COLOR DUEL</strong><a href="HUONG_DAN.html">Hướng dẫn bắt đầu</a><a href="#nhung-gi-da-co">Những gì đã có</a><a href="#chuan-bi-tren-moi-may">Chuẩn bị trên mỗi máy</a><a href="#chay-thu-tren-mot-may">Chạy thử trên một máy</a><a href="#chay-tren-bon-may">Chạy trên bốn máy</a><a href="#cach-choi-tren-giao-dien">Cách chơi trên giao diện</a><a href="#quy-tac-xu-ly-bo-sung">Quy tắc xử lý bổ sung</a><a href="#du-lieu-nam-o-dau">Dữ liệu nằm ở đâu</a><a href="#mo-va-sua-ma-nguon">Mở và sửa mã nguồn</a><a href="#goi-y-phan-cong-nhom-bon-nguoi">Gợi ý phân công nhóm bốn người</a><a href="#kich-ban-demo-truoc-khi-nop">Kịch bản demo trước khi nộp</a><a href="#cac-loi-thuong-gap">Các lỗi thường gặp</a><a href="#neu-cac-thanh-vien-o-khac-nha">Nếu các thành viên ở khác nhà</a><a href="#pham-vi-da-xac-minh">Phạm vi đã xác minh</a></nav><main><h1 id="huong-dan-chay-game-doan-day-mau-doi-khang-online">Hướng dẫn chạy game đoán dãy màu đối kháng online</h1><p><strong>Bản giao diện 1.1 ngày 21/09/2026.</strong> Màn hình đăng nhập và sảnh có hình minh họa riêng, phòng chơi có avatar, ô màu hiệu ứng khối và đồng hồ vòng tròn. Hình ảnh được đóng gói sẵn trong chương trình.</p><p><strong>Giữ tài khoản cũ:</strong> dừng server/client, giải nén bản mới vào thư mục riêng, sao chép thư mục <code>data</code> của bản cũ sang thư mục <code>ColorDuel</code> mới, rồi chạy <code>demo-1may.bat</code>. Chi tiết trong <code>CAP_NHAT_GIAO_DIEN.txt</code>.</p><p><img alt="Giao diện đăng nhập mới" src="docs/images/login.png"></p>
+<p>Bộ chương trình này triển khai đề tài trong file <strong>Game_doan_day_mau_doi_khang_online.docx</strong>: hai người chơi <strong>luân phiên</strong>, mỗi lượt <strong>15 giây</strong>, cùng đoán một dãy gồm sáu màu khác nhau. Server giữ dãy bí mật, xử lý luật và lưu dữ liệu; client cung cấp giao diện để đăng nhập, mời đấu, sắp xếp màu và xem kết quả.</p>
+<p>Nhóm có thể dùng <strong>một máy server và ba máy client</strong>. Hai client đang chơi một trận, client thứ ba ở sảnh và có thể mời người rỗi. Server là một chương trình Java chạy trên laptop bình thường. Khi phát triển, một laptop cũng có thể mở một server và nhiều cửa sổ client để thử.</p>
+<p>Tài liệu đi kèm: <a href="docs/GIAO_THUC.html">Đặc tả giao thức TCP</a> · <a href="docs/KIEM_THU.html">Kết quả kiểm thử</a>.</p><h2 id="nhung-gi-da-co">Những gì đã có</h2>
+<div class="table-wrap"><table><thead><tr><th>Yêu cầu</th><th>Cách chương trình thực hiện</th></tr></thead><tbody>
+<tr><td>Tài khoản</td><td>Đăng ký, đăng nhập, chặn một tài khoản đăng nhập đồng thời hai nơi</td></tr>
+<tr><td>Danh sách online</td><td>Tên, điểm, số trận thắng, tổng số trận, trạng thái cập nhật từ server</td></tr>
+<tr><td>Mời đấu</td><td>Chọn đối thủ, Mời thi đấu, Chấp nhận hoặc Từ chối</td></tr>
+<tr><td>Phòng chơi</td><td>Đúng hai người; mỗi phòng có dãy bí mật và trạng thái riêng</td></tr>
+<tr><td>Sáu màu cố định</td><td>Đỏ, Xanh lá, Xanh dương, Vàng, Tím, Cam; mỗi màu dùng một lần</td></tr>
+<tr><td>Thao tác chọn màu</td><td>Bấm màu để điền vào ô trống; bấm hai ô để đổi chỗ</td></tr>
+<tr><td>Lượt và thời gian</td><td>Luân phiên, 15 giây/lượt do server quyết định; hết giờ tự chuyển lượt</td></tr>
+<tr><td>Lịch sử chung</td><td>Cả hai thấy người đoán, dãy dự đoán, số vị trí đúng và lượt hết giờ</td></tr>
+<tr><td>Kết quả</td><td>Đúng 6 vị trí thì thắng; thắng +1 điểm, thua +0; cập nhật số trận</td></tr>
+<tr><td>Thoát và mất mạng</td><td>Người rời phòng hoặc mất kết nối trong trận bị tính thua</td></tr>
+<tr><td>Chơi lại</td><td>Hai người cùng đồng ý thì server tạo ván mới, xóa bảng lượt đang hiển thị</td></tr>
+<tr><td>Dữ liệu</td><td>Tài khoản, điểm, trận đấu và từng lượt được lưu trong thư mục data của server</td></tr>
+<tr><td>Xếp hạng</td><td>Điểm giảm dần, trận thắng giảm dần, tổng số trận giảm dần</td></tr>
+</tbody></table></div>
+<p>Chương trình dùng <strong>Java 17 + TCP Socket + Swing</strong>. Bộ chạy đã biên dịch nằm trong <code>dist/ColorDuel.jar</code>. Không cần cài SQL Server, MySQL, Python hoặc thư viện Java ngoài để chạy.</p>
+<p><img loading="lazy" alt="Giao diện phòng chơi" src="docs/images/game.png"></p>
+<p>Ảnh trên được dựng từ giao diện Swing trong bộ kiểm thử; các tài khoản và lượt đoán trong ảnh là dữ liệu minh họa.</p>
+<h2 id="chuan-bi-tren-moi-may">Chuẩn bị trên mỗi máy</h2>
+<ol>
+<li>Cài <strong>JDK 17 trở lên</strong>. Nhóm nên thống nhất một phiên bản, ví dụ JDK 17, để dễ hỗ trợ nhau. Có thể lấy bộ cài Windows x64 loại JDK từ <a href="https://adoptium.net/temurin/releases/?version=17">Eclipse Temurin</a>.</li>
+<li>Khi cài, giữ tùy chọn thêm Java vào <strong>PATH</strong>; có thể bật thêm <strong>JAVA_HOME</strong>. Tham khảo <a href="https://adoptium.net/installation/windows/">hướng dẫn cài Windows của Adoptium</a>.</li>
+<li>Đóng rồi mở lại CMD hoặc PowerShell. Chạy lệnh dưới đây và kiểm tra phiên bản từ 17 trở lên.</li>
+<li>Giải nén ZIP bằng <strong>Extract All</strong>. Mở thư mục <code>ColorDuel</code> đã giải nén; không chạy file ngay trong cửa sổ ZIP/WinRAR. Có thể đặt tại <code>C:\ColorDuel</code> để thao tác dễ hơn.</li>
+</ol>
+<pre><code>java -version</code></pre>
+<p>Chỉ chạy bản JAR cần Java tương thích; cài JDK như trên còn giúp biên dịch và chỉnh sửa mã nguồn. NetBeans là công cụ tùy chọn, không bắt buộc để chạy demo.</p>
+<h2 id="chay-thu-tren-mot-may">Chạy thử trên một máy</h2>
+<p>Nên thử bước này trước khi chia sang bốn máy để tách lỗi chương trình khỏi lỗi cấu hình mạng.</p>
+<ol>
+<li>Nhấp đúp <code>demo-1may.bat</code>. Nó mở một cửa sổ server và ba cửa sổ client.</li>
+<li>Đợi server in thông báo đang nghe cổng <code>5000</code>. Giữ cửa sổ server mở.</li>
+<li>Ở cả ba client, giữ IP <code>127.0.0.1</code> và cổng <code>5000</code>.</li>
+<li>Lần đầu, đăng ký ba tài khoản khác nhau, ví dụ <code>nguoi1</code>, <code>nguoi2</code>, <code>nguoi3</code>; tự đặt mật khẩu ít nhất sáu ký tự. Tên hiển thị có thể có dấu. <strong>Không có tài khoản mặc định được tạo sẵn.</strong></li>
+<li>Client 1 chọn Client 2 trong danh sách rồi bấm <strong>Mời thi đấu</strong>. Client 2 bấm <strong>Chấp nhận</strong> trong khung lời mời ở cuối sảnh.</li>
+<li>Hai client vào phòng; một người được server chọn ngẫu nhiên đi trước. Client 3 tiếp tục ở sảnh.</li>
+</ol>
+<p>Nếu server đã chạy rồi, mở thêm <code>run-client.bat</code> theo số cửa sổ cần thiết. Chỉ có một server được dùng thư mục dữ liệu và cổng đó tại một thời điểm.</p>
+<p><img loading="lazy" alt="Giao diện sảnh người chơi" src="docs/images/lobby.png"></p>
+<h2 id="chay-tren-bon-may">Chạy trên bốn máy</h2>
+<p>Kết nối cả bốn laptop vào cùng mạng Wi-Fi/LAN cho phép các máy liên lạc với nhau. Chạy qua mạng nội bộ không cần Internet sau khi đã cài Java và tải bộ chương trình.</p>
+<div class="table-wrap"><table><thead><tr><th>Máy</th><th>Chương trình cần mở</th><th>Địa chỉ IP nhập tại client</th></tr></thead><tbody>
+<tr><td>Máy 1</td><td>run-server.bat</td><td>Không cần nhập IP client</td></tr>
+<tr><td>Máy 2</td><td>run-client.bat</td><td>IPv4 của Máy 1</td></tr>
+<tr><td>Máy 3</td><td>run-client.bat</td><td>IPv4 của Máy 1</td></tr>
+<tr><td>Máy 4</td><td>run-client.bat</td><td>IPv4 của Máy 1</td></tr>
+</tbody></table></div>
+<h3 id="buoc-1-lay-dia-chi-ip-cua-server">Bước 1 lấy địa chỉ IP của server</h3>
+<p>Trên <strong>Máy 1</strong>, mở CMD và chạy:</p>
+<pre><code>ipconfig</code></pre>
+<p>Tìm dòng <strong>IPv4 Address</strong> trong card Wi-Fi/Ethernet đang sử dụng. Ví dụ IP là <code>192.168.1.10</code>. Đây chỉ là ví dụ, nhóm phải dùng IP thực tế của Máy 1. Không lấy Default Gateway, địa chỉ của card mạng ảo không dùng, hoặc địa chỉ <code>127.0.0.1</code> để nhập ở máy khác.</p>
+<p>Cũng có thể xem IPv4 trong <strong>Settings → Network &amp; internet → Properties</strong> của kết nối hiện tại, theo <a href="https://support.microsoft.com/en-us/windows/experience/connectivity-networking/essential-network-settings-and-tasks-in-windows">hướng dẫn mạng của Microsoft</a>.</p>
+<h3 id="buoc-2-mo-server">Bước 2 mở server</h3>
+<p>Nhấp đúp <code>run-server.bat</code> trên Máy 1. Khi thành công, cửa sổ có dòng tương tự:</p>
+<pre><code>Server TCP đang nghe 0.0.0.0:5000</code></pre>
+<p><code>0.0.0.0</code> ở đây nghĩa là server lắng nghe trên các giao diện IPv4 của máy. <strong>Client vẫn nhập IPv4 cụ thể của Máy 1</strong>, ví dụ <code>192.168.1.10</code>.</p>
+<h3 id="buoc-3-cho-phep-ket-noi-qua-windows-firewall">Bước 3 cho phép kết nối qua Windows Firewall</h3>
+<p>Với mạng LAN riêng của nhóm mà bạn tin cậy, đặt <strong>Network profile type = Private</strong> trong thuộc tính kết nối mạng trên máy server. Microsoft mô tả cách đổi loại mạng tại <a href="https://support.microsoft.com/en-us/windows/experience/connectivity-networking/essential-network-settings-and-tasks-in-windows">trang hướng dẫn Network profile</a>. Không cần bật chia sẻ file để chương trình hoạt động.</p>
+<p>Nếu Windows hỏi quyền mạng cho Java, cho phép Java trên mạng <strong>Private</strong>. Nếu client vẫn không kết nối được, mở <strong>PowerShell bằng Run as administrator trên máy server</strong> và chạy một lần:</p>
+<pre><code>New-NetFirewallRule -DisplayName &quot;ColorDuel TCP 5000&quot; -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5000 -Profile Private -RemoteAddress LocalSubnet</code></pre>
+<p>Lệnh này chỉ mở TCP 5000 từ mạng con nội bộ trong profile Private; không cần tắt toàn bộ firewall. Các tham số được mô tả trong <a href="https://learn.microsoft.com/en-us/powershell/module/netsecurity/new-netfirewallrule">New-NetFirewallRule của Microsoft</a>. Nếu máy do trường quản lý, việc tạo rule cần tài khoản có quyền phù hợp.</p>
+<h3 id="buoc-4-kiem-tra-tu-may-client">Bước 4 kiểm tra từ máy client</h3>
+<p>Trên Máy 2, 3 và 4, mở PowerShell và kiểm tra. Thay IP ví dụ bằng IP server thực tế:</p>
+<pre><code>Test-NetConnection 192.168.1.10 -Port 5000</code></pre>
+<p>Khi thấy <code>TcpTestSucceeded : True</code>, đường TCP đến server đã thông. Nếu False, kiểm tra server còn chạy, đúng IP, đúng cổng, firewall và mạng có chặn các máy cùng Wi-Fi liên lạc hay không. <code>ping</code> thất bại chưa đủ kết luận TCP bị chặn; dùng phép thử cổng ở trên.</p>
+<h3 id="buoc-5-mo-ba-client">Bước 5 mở ba client</h3>
+<ol>
+<li>Mỗi máy client mở <code>run-client.bat</code>.</li>
+<li>Đổi ô <strong>Địa chỉ IP server</strong> từ <code>127.0.0.1</code> thành IPv4 của Máy 1.</li>
+<li>Giữ cổng <code>5000</code>; đăng ký tài khoản mới hoặc đăng nhập tài khoản đã tạo.</li>
+<li>Cả ba người phải xuất hiện trong danh sách online. Chọn một người rỗi để mời thi đấu.</li>
+</ol>
+<p><strong>127.0.0.1 luôn trỏ về chính máy đang chạy client.</strong> Chỉ giữ địa chỉ này khi server nằm trên chính máy đó. Không chạy thêm server riêng ở mỗi client, vì khi đó các máy sẽ trở thành những hệ thống độc lập.</p>
+<p>Máy server cũng có thể mở thêm một client kết nối <code>127.0.0.1</code> nếu thành viên vận hành server muốn chơi. Đây là hai chương trình cùng chạy trên một máy, không làm thay đổi vai trò trung tâm của server.</p>
+<h2 id="cach-choi-tren-giao-dien">Cách chơi trên giao diện</h2>
+<ol>
+<li>Khi đến lượt, bấm lần lượt sáu nút màu để điền từ ô trống đầu tiên. Màu đã dùng sẽ bị khóa trong bảng màu.</li>
+<li>Để đổi thứ tự, bấm một ô rồi bấm ô khác; hai màu đổi chỗ. Bấm lại cùng ô đã chọn để bỏ màu, hoặc dùng nút <strong>Bỏ ô đang chọn</strong>. <strong>Xóa tất cả</strong> làm trống cả sáu ô.</li>
+<li>Bấm <strong>Gửi dự đoán</strong> khi đủ sáu màu. Server kiểm tra lượt và thời gian trước khi chấm.</li>
+<li>Cột <strong>Đúng</strong> chỉ cho biết số vị trí đúng, ví dụ <code>3/6</code>. Những con số nhỏ trong các ô màu là mã nhận biết màu theo bảng màu, không đánh dấu vị trí đúng.</li>
+<li>Khi đang chờ đối thủ, các nút chọn màu và gửi bị khóa. Hết 15 giây mà chưa gửi, server ghi lượt hết giờ rồi chuyển lượt.</li>
+<li>Đúng <code>6/6</code> thì trận kết thúc. Chọn <strong>Chơi lại</strong>; khi cả hai cùng chọn, server bắt đầu ván mới. Hoặc chọn <strong>Trở về danh sách online</strong> để mời người khác.</li>
+<li><strong>Thoát phòng</strong> khi đang chơi có hộp thoại xác nhận và bị tính thua nếu đồng ý. Đóng ứng dụng giữa trận cũng có xác nhận.</li>
+</ol>
+<p>Sau mỗi lượt của đối thủ, người chơi có thể sử dụng cả lịch sử của mình và của đối thủ để suy luận. Không có giới hạn tổng số lượt đoán.</p>
+<h2 id="quy-tac-xu-ly-bo-sung">Quy tắc xử lý bổ sung</h2>
+<p>Các điểm dưới đây cụ thể hóa những tình huống chưa mô tả chi tiết trong đề:</p>
+<ul>
+<li>Người đi trước được chọn ngẫu nhiên mỗi ván; thời gian lời mời là 30 giây, có nút hủy lời mời.</li>
+<li>Một người chỉ có một lời mời đang chờ hoặc một phòng hiện tại, để tránh chấp nhận nhiều trận đồng thời.</li>
+<li>Sau khi kết thúc, hai người ở trạng thái <strong>Chờ chơi lại</strong> cho đến khi có người chọn trở về sảnh. Nếu một người rời đi, chơi lại với cặp cũ không còn khả dụng.</li>
+<li>Client gửi heartbeat định kỳ. Nếu đóng kết nối, server thường nhận biết ngay; nếu đứt mạng im lặng, server xác định mất kết nối sau khoảng 35 giây không nhận được thông điệp. Đồng hồ lượt vẫn tiếp tục do server quản lý.</li>
+<li>Server dừng hoặc khởi động lại thì ván đang dở được hủy, giữ lịch sử đã lưu nhưng không tính điểm/trận hoàn thành. Người chơi đăng nhập lại và tạo trận mới. Việc này khác với một client tự rời trận.</li>
+<li>Tab <strong>Các trận của tôi</strong> hiển thị tối đa 100 trận gần nhất. Server vẫn lưu toàn bộ các trận và mọi lượt đoán. Lịch sử trong phòng hiện tại không bị cắt theo giới hạn 100 này.</li>
+<li>Hòa các tiêu chí xếp hạng thì sắp thêm theo tài khoản để danh sách ổn định. Theo luật +1 điểm/thắng, tổng điểm và số trận thắng hiện bằng nhau.</li>
+</ul>
+<h2 id="du-lieu-nam-o-dau">Dữ liệu nằm ở đâu</h2>
+<p>Server tự tạo <code>data/state.bin</code>, lưu tài khoản, salt và mật khẩu băm, điểm, số trận thắng, tổng số trận, dãy bí mật của từng trận, người thắng, lý do kết thúc và toàn bộ các lượt đoán. Dữ liệu được ghi lại sau khi đăng ký, bắt đầu trận, hoàn thành/bỏ qua một lượt và kết thúc trận.</p>
+<p><strong>Giữ thư mục data trên đúng máy server</strong> để khởi động lại vẫn còn tài khoản và điểm. Sao lưu thư mục sau khi dừng server. Không sửa state.bin bằng tay hoặc chép dữ liệu thật của server cho các client.</p>
+<p>Mở <code>export.bat</code> trên server để xuất:</p>
+<div class="table-wrap"><table><thead><tr><th>File trong reports</th><th>Nội dung</th></tr></thead><tbody>
+<tr><td>players.csv</td><td>Tài khoản, tên hiển thị, điểm, số trận thắng, tổng số trận</td></tr>
+<tr><td>matches.csv</td><td>Mã trận, hai người chơi, dãy bí mật, kết quả, thời gian, số lượt</td></tr>
+<tr><td>turns.csv</td><td>Mỗi lượt: người đoán, dãy dự đoán, số vị trí đúng, trạng thái và thời gian</td></tr>
+</tbody></table></div>
+<p>Các file CSV dành cho người quản lý server; đặc biệt matches.csv có đáp án. Không chia sẻ file đó cho người đang chơi. Mật khẩu và bản băm mật khẩu không được đưa vào CSV.</p>
+<h2 id="mo-va-sua-ma-nguon">Mở và sửa mã nguồn</h2>
+<p>Mọi lớp thuộc package <code>vn.ptit.colorgame</code>. Nhóm có thể dùng NetBeans, IntelliJ hoặc VS Code.</p>
+<p><strong>Cách dùng NetBeans:</strong> chọn <strong>File → Open Project</strong>, mở thư mục có <code>pom.xml</code>, dùng JDK từ 17 trở lên. Điểm vào chương trình là <code>vn.ptit.colorgame.Main</code>. Tham số <code>server</code> khởi động server; <code>client</code> mở giao diện. Nếu IDE cần tải plugin Maven lần đầu thì phải có mạng; cách chạy bằng JAR và các script không cần Maven.</p>
+<p>Sau khi chỉnh nguồn, nhấp đúp <strong>build.bat</strong> để cập nhật <code>dist/ColorDuel.jar</code>, rồi khởi động lại server/client. Nếu chưa build lại, file JAR vẫn là bản cũ.</p>
+<div class="table-wrap"><table><thead><tr><th>Lớp</th><th>Nhiệm vụ chính</th></tr></thead><tbody>
+<tr><td>Main</td><td>Chọn chế độ server, client hoặc export</td></tr>
+<tr><td>GameServer</td><td>Nhận nhiều kết nối, đăng nhập, online, lời mời, phòng, lượt, thời gian và kết quả</td></tr>
+<tr><td>NetworkClient</td><td>Kết nối TCP, luồng nhận/gửi riêng, heartbeat, báo mất kết nối</td></tr>
+<tr><td>GameClient</td><td>Giao diện Swing, chọn màu, sảnh, bảng xếp hạng, lịch sử</td></tr><tr><td>GameTheme</td><td>Bộ thành phần giao diện, hình minh họa, avatar, nút màu và đồng hồ tròn</td></tr>
+<tr><td>Rules</td><td>Sáu màu, kiểm tra hoán vị, chấm đúng vị trí, tạo dãy ngẫu nhiên</td></tr>
+<tr><td>Wire</td><td>Đóng khung thông điệp bằng dòng, mã hóa các trường dữ liệu</td></tr>
+<tr><td>Store</td><td>Đọc/ghi dữ liệu, tính thứ tự xếp hạng, xuất CSV</td></tr>
+<tr><td>Passwords</td><td>Tạo salt, băm và kiểm tra mật khẩu bằng PBKDF2</td></tr>
+</tbody></table></div>
+<p>Các lớp Account, Match và Move nằm trong Store. Room, Invitation và Session nằm trong GameServer. File <code>docs/GIAO_THUC.md</code> giải thích từng lệnh trao đổi qua mạng.</p>
+<h2 id="goi-y-phan-cong-nhom-bon-nguoi">Gợi ý phân công nhóm bốn người</h2>
+<div class="table-wrap"><table><thead><tr><th>Thành viên</th><th>Phần chịu trách nhiệm</th><th>Kết quả cần giải thích được</th></tr></thead><tbody>
+<tr><td>1</td><td>GameServer, Wire</td><td>TCP server, nhiều kết nối, giao thức, mời đấu và quản lý phòng</td></tr>
+<tr><td>2</td><td>Rules, Store, Passwords</td><td>Luật sáu màu, chấm điểm, lưu trữ, xếp hạng và tài khoản</td></tr>
+<tr><td>3</td><td>GameClient</td><td>Giao diện, chọn màu, khóa/mở nút theo lượt, bảng lịch sử</td></tr>
+<tr><td>4</td><td>NetworkClient, bộ kiểm thử, triển khai</td><td>Luồng TCP client, heartbeat, thử nhiều máy, cấu hình IP/firewall và báo cáo kiểm thử</td></tr>
+</tbody></table></div>
+<p>Cả nhóm nên đọc luồng bắt đầu trận, GUESS và kết thúc trận. Một thành viên viết server không có nghĩa thành viên đó chỉ được sử dụng máy server khi demo. Nên quản lý mã nguồn bằng Git, chia theo file và kiểm tra lại khi ghép các thay đổi.</p>
+<h2 id="kich-ban-demo-truoc-khi-nop">Kịch bản demo trước khi nộp</h2>
+<ol>
+<li>Mở server và ba client trên bốn máy. Chỉ rõ IP server, cổng TCP và danh sách ba người online.</li>
+<li>Thử một lời mời bị từ chối, sau đó mời lại và chấp nhận.</li>
+<li>Hai người luân phiên gửi dự đoán. Chứng minh bảng lịch sử hai máy giống nhau, còn client thứ ba thấy họ đang bận.</li>
+<li>Để một lượt quá 15 giây: hai máy cùng thấy hết giờ và lượt chuyển sang người còn lại.</li>
+<li>Dựa vào lịch sử để tìm đáp án; sau khi thắng, kiểm tra điểm, trận thắng và tổng số trận. Bộ kiểm thử tự động có một bộ giải dùng phản hồi công khai để kiểm tra trường hợp đoán đúng.</li>
+<li>Cả hai bấm Chơi lại: phòng/ván mới xuất hiện, lịch sử hiện tại được xóa.</li>
+<li>Một người bấm Thoát và xác nhận: đối thủ được tính thắng. Làm lại một ván và ngắt client để kiểm tra mất kết nối.</li>
+<li>Xem bảng xếp hạng, tab các trận đã chơi, chạy export.bat. Dừng rồi mở lại server, đăng nhập lại và đối chiếu dữ liệu còn được giữ.</li>
+</ol>
+<p>Chi tiết kết quả kiểm tra sẵn có nằm trong <code>docs/KIEM_THU.md</code>. Bộ test chạy bằng <code>test.bat</code>, tạo dữ liệu ở thư mục tạm và không dùng tài khoản/data thật của nhóm.</p>
+<h2 id="cac-loi-thuong-gap">Các lỗi thường gặp</h2>
+<div class="table-wrap"><table><thead><tr><th>Hiện tượng</th><th>Cách kiểm tra và xử lý</th></tr></thead><tbody>
+<tr><td>java is not recognized</td><td>Cài JDK, thêm Java vào PATH, mở lại terminal</td></tr>
+<tr><td>UnsupportedClassVersionError</td><td>Java đang dùng quá cũ; kiểm tra java -version và đổi sang từ 17 trở lên</td></tr>
+<tr><td>Thiếu module jdk.compiler khi build</td><td>Cài đầy đủ JDK; kiểm tra terminal đang trỏ đúng bản JDK</td></tr>
+<tr><td>Address already in use</td><td>Cổng đang có server khác; dùng server đang chạy hoặc chọn cổng khác</td></tr>
+<tr><td>Không kết nối được hoặc TcpTestSucceeded False</td><td>Kiểm tra server đang mở, IPv4 thực tế, cổng, profile/rule firewall và mạng LAN</td></tr>
+<tr><td>Các client không thấy nhau</td><td>Cùng nhập một địa chỉ server; không mở server riêng trên từng máy client</td></tr>
+<tr><td>Tài khoản đang đăng nhập ở máy khác</td><td>Dùng tài khoản khác hoặc đóng client cũ và đợi server nhận ngắt kết nối</td></tr>
+<tr><td>Nút Gửi dự đoán bị khóa</td><td>Chỉ mở khi đúng lượt, còn thời gian và đã chọn đủ sáu màu</td></tr>
+<tr><td>Chơi lại đang chờ</td><td>Cần cả hai đồng ý; nếu đối thủ trở về sảnh thì quay lại danh sách để mời người khác</td></tr>
+<tr><td>Điểm biến mất sau mở server</td><td>Kiểm tra có chạy đúng bản thư mục data trên máy server cũ hay không</td></tr>
+<tr><td>Không ghi được state.bin</td><td>Đặt dự án ở thư mục được phép ghi; không để chỉ đọc hoặc trong ZIP; giữ bản sao dữ liệu trước khi chuyển chỗ</td></tr>
+<tr><td>Thư mục dữ liệu đang được server khác sử dụng</td><td>Không chạy hai server trên cùng thư mục data</td></tr>
+</tbody></table></div>
+<p>Nếu muốn đổi cổng, mở terminal tại thư mục dự án và chạy:</p>
+<pre><code>.\run-server.bat 5001
+.\run-client.bat 192.168.1.10 5001</code></pre>
+<p>Nếu đổi cổng, rule firewall và phép thử Test-NetConnection cũng cần đổi tương ứng. Khi không dùng nữa, có thể xóa rule đã tạo bằng PowerShell quản trị:</p>
+<pre><code>Remove-NetFirewallRule -DisplayName &quot;ColorDuel TCP 5000&quot;</code></pre>
+<h2 id="neu-cac-thanh-vien-o-khac-nha">Nếu các thành viên ở khác nhà</h2>
+<p>Địa chỉ riêng như <code>192.168.x.x</code> của một nhà không được dùng trực tiếp từ nhà khác. Có thể đưa các máy vào cùng một mạng VPN riêng rồi nhập địa chỉ VPN của máy server; kiểm tra cổng TCP 5000 qua địa chỉ đó trước khi đăng nhập. Rule LocalSubnet ở ví dụ LAN có thể không khớp dải IP VPN; khi cần, tạo rule giới hạn vào các IP VPN của đúng ba máy client và profile mạng đang dùng.</p>
+<p>Bản bàn giao phù hợp để học và demo trên <strong>LAN/VPN tin cậy</strong>. TCP hiện chưa bật TLS, nên dùng tài khoản và mật khẩu riêng cho demo. Không nên đưa nguyên bản lên Internet công khai. Nếu triển khai Internet thật, phần mở rộng cần có TLS, kiểm soát truy cập và giới hạn tài nguyên phù hợp.</p>
+<h2 id="pham-vi-da-xac-minh">Phạm vi đã xác minh</h2>
+<p>Mã đã được biên dịch bằng OpenJDK 17 và kiểm tra bằng nhiều kết nối TCP thật trên cùng môi trường Linux, bao gồm chính lớp NetworkClient và giao diện Swing chạy headless. Bố cục giao diện đã được render và xem ảnh. <strong>Chưa chạy trực tiếp trên bốn laptop Windows của nhóm</strong>; nhóm cần hoàn thành kịch bản LAN phía trên trước ngày bảo vệ. Các script Windows được cung cấp để thực hiện việc đó.</p><footer>Bài tập lớn Lập trình mạng · Java TCP Socket · Giao diện 1.1 · 21/09/2026</footer></main></div></body></html>

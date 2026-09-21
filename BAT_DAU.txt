@@ -1,0 +1,13 @@
+COLOR DUEL - GAME DOAN DAY MAU DOI KHANG ONLINE
+
+1. Giai nen toan bo thu muc ColorDuel.
+2. Cai JDK 17 tro len. Kiem tra: java -version
+3. Mo HUONG_DAN.html de doc huong dan tieng Viet co dau.
+
+Thu tren 1 may: mo demo-1may.bat.
+Chay 4 may: 1 may mo run-server.bat, 3 may mo run-client.bat.
+Client tren may khac phai nhap IPv4 cua may server, cong 5000.
+Moi client dang ky tai khoan rieng. Khong co tai khoan tao san.
+
+Sau khi sua ma nguon: mo build.bat de bien dich lai.
+Doc README.md va docs/GIAO_THUC.md de tim hieu cach lap trinh.

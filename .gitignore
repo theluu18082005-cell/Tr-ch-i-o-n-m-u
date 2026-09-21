@@ -1,0 +1,7 @@
+/build/
+/target/
+/data/*.bin
+/data/*.tmp
+/data/*.lock
+/reports/
+*.log
