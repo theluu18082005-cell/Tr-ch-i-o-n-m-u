@@ -5,3 +5,5 @@
 /data/*.lock
 /reports/
 *.log
+/data/mysql.properties
+/dist/lib/

@@ -1,0 +1,9 @@
+# Copy to mysql.properties on the SERVER only; this real file is ignored by Git.
+db.host=127.0.0.1
+db.port=3306
+db.name=color_duel
+db.user=root
+db.password=
+# DISABLED is for MySQL on this same computer only.
+db.sslMode=DISABLED
+db.allowPublicKeyRetrieval=true

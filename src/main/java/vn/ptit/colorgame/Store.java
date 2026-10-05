@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-/** Snapshot duy nhất chứa cả kết quả và điểm số, thay thế nguyên tử sau mỗi thay đổi. */
+/** MySQL khi có mysql.properties; nếu không có cấu hình thì dùng snapshot file. */
 public final class Store {
     public static final class Account {
         public String username, displayName, salt, hash;
@@ -43,13 +43,25 @@ public final class Store {
     public final Map<String, Account> accounts = new LinkedHashMap<>();
     public final List<Match> matches = new ArrayList<>();
     public final Path directory;
+    private final MySqlStore mysql;
 
     public Store(Path directory) throws IOException {
         this.directory = directory.toAbsolutePath();
         Files.createDirectories(this.directory);
         Path file = this.directory.resolve("state.bin");
-        if (Files.exists(file)) load(file);
+        Path config = this.directory.resolve("mysql.properties");
+        mysql = Files.exists(config) ? new MySqlStore(config) : null;
+        if (mysql == null) {
+            if (Files.exists(file)) load(file);
+        } else if (!mysql.load(this)) {
+            if (Files.exists(file)) load(file);
+            mysql.save(this);
+            System.out.println("Đã khởi tạo MySQL: " + accounts.size() + " tài khoản, " + matches.size()
+                    + " trận đấu. Giữ nguyên state.bin làm bản lưu dữ liệu cũ.");
+        }
     }
+
+    public String storageDescription() { return mysql == null ? directory.resolve("state.bin").toString() : mysql.description(); }
 
     private static int count(DataInputStream in) throws IOException {
         int n = in.readInt();
@@ -84,6 +96,7 @@ public final class Store {
     }
 
     public void save() throws IOException {
+        if (mysql != null) { mysql.save(this); return; }
         Path temp = directory.resolve("state.bin.tmp"), target = directory.resolve("state.bin");
         try (FileOutputStream raw = new FileOutputStream(temp.toFile());
              DataOutputStream out = new DataOutputStream(new BufferedOutputStream(raw))) {

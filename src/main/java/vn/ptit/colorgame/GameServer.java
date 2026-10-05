@@ -72,6 +72,7 @@ public final class GameServer implements AutoCloseable {
     public void start() {
         log("Server TCP đang nghe 0.0.0.0:" + port());
         log("Dữ liệu: " + store.directory);
+        log("Lưu trữ: " + store.storageDescription());
         log("Mỗi lượt 15 giây; không giới hạn số lượt. Ctrl+C để dừng server.");
         Thread accept = new Thread(() -> {
             while (!closing.get()) {
