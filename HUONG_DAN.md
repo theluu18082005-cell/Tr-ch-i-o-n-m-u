@@ -6,7 +6,7 @@
 
 ![Giao diện đăng nhập mới](docs/images/login.png)
 
-Bộ chương trình này triển khai đề tài trong file **Game_doan_day_mau_doi_khang_online.docx**: hai người chơi **luân phiên**, mỗi lượt **15 giây**, cùng đoán một dãy gồm sáu màu khác nhau. Server giữ dãy bí mật, xử lý luật và lưu dữ liệu; client cung cấp giao diện để đăng nhập, mời đấu, sắp xếp màu và xem kết quả.
+Bộ chương trình này triển khai đề tài trong file **Game_doan_day_mau_doi_khang_online.docx**: hai người chơi **luân phiên**, mỗi lượt **30 giây**, cùng đoán một dãy gồm sáu màu khác nhau. Server giữ dãy bí mật, xử lý luật và lưu dữ liệu; client cung cấp giao diện để đăng nhập, mời đấu, sắp xếp màu và xem kết quả.
 
 Nhóm có thể dùng **một máy server và ba máy client**. Hai client đang chơi một trận, client thứ ba ở sảnh và có thể mời người rỗi. Server là một chương trình Java chạy trên laptop bình thường. Khi phát triển, một laptop cũng có thể mở một server và nhiều cửa sổ client để thử.
 
@@ -22,7 +22,7 @@ Tài liệu đi kèm: [Đặc tả giao thức TCP](docs/GIAO_THUC.html) · [K�
 | Phòng chơi | Đúng hai người; mỗi phòng có dãy bí mật và trạng thái riêng |
 | Sáu màu cố định | Đỏ, Xanh lá, Xanh dương, Vàng, Tím, Cam; mỗi màu dùng một lần |
 | Thao tác chọn màu | Bấm màu để điền vào ô trống; bấm hai ô để đổi chỗ |
-| Lượt và thời gian | Luân phiên, 15 giây/lượt do server quyết định; hết giờ tự chuyển lượt |
+| Lượt và thời gian | Luân phiên, 30 giây/lượt do server quyết định; hết giờ tự chuyển lượt |
 | Lịch sử chung | Cả hai thấy người đoán, dãy dự đoán, số vị trí đúng và lượt hết giờ |
 | Kết quả | Đúng 6 vị trí thì thắng; thắng +1 điểm, thua +0; cập nhật số trận |
 | Thoát và mất mạng | Người rời phòng hoặc mất kết nối trong trận bị tính thua |
@@ -136,7 +136,7 @@ Máy server cũng có thể mở thêm một client kết nối `127.0.0.1` nế
 2. Để đổi thứ tự, bấm một ô rồi bấm ô khác; hai màu đổi chỗ. Bấm lại cùng ô đã chọn để bỏ màu, hoặc dùng nút **Bỏ ô đang chọn**. **Xóa tất cả** làm trống cả sáu ô.
 3. Bấm **Gửi dự đoán** khi đủ sáu màu. Server kiểm tra lượt và thời gian trước khi chấm.
 4. Cột **Đúng** chỉ cho biết số vị trí đúng, ví dụ `3/6`. Những con số nhỏ trong các ô màu là mã nhận biết màu theo bảng màu, không đánh dấu vị trí đúng.
-5. Khi đang chờ đối thủ, các nút chọn màu và gửi bị khóa. Hết 15 giây mà chưa gửi, server ghi lượt hết giờ rồi chuyển lượt.
+5. Khi đang chờ đối thủ, các nút chọn màu và gửi bị khóa. Hết 30 giây mà chưa gửi, server ghi lượt hết giờ rồi chuyển lượt.
 6. Đúng `6/6` thì trận kết thúc. Chọn **Chơi lại**; khi cả hai cùng chọn, server bắt đầu ván mới. Hoặc chọn **Trở về danh sách online** để mời người khác.
 7. **Thoát phòng** khi đang chơi có hộp thoại xác nhận và bị tính thua nếu đồng ý. Đóng ứng dụng giữa trận cũng có xác nhận.
 
@@ -209,7 +209,7 @@ Cả nhóm nên đọc luồng bắt đầu trận, GUESS và kết thúc trận
 1. Mở server và ba client trên bốn máy. Chỉ rõ IP server, cổng TCP và danh sách ba người online.
 2. Thử một lời mời bị từ chối, sau đó mời lại và chấp nhận.
 3. Hai người luân phiên gửi dự đoán. Chứng minh bảng lịch sử hai máy giống nhau, còn client thứ ba thấy họ đang bận.
-4. Để một lượt quá 15 giây: hai máy cùng thấy hết giờ và lượt chuyển sang người còn lại.
+4. Để một lượt quá 30 giây: hai máy cùng thấy hết giờ và lượt chuyển sang người còn lại.
 5. Dựa vào lịch sử để tìm đáp án; sau khi thắng, kiểm tra điểm, trận thắng và tổng số trận. Bộ kiểm thử tự động có một bộ giải dùng phản hồi công khai để kiểm tra trường hợp đoán đúng.
 6. Cả hai bấm Chơi lại: phòng/ván mới xuất hiện, lịch sử hiện tại được xóa.
 7. Một người bấm Thoát và xác nhận: đối thủ được tính thắng. Làm lại một ván và ngắt client để kiểm tra mất kết nối.

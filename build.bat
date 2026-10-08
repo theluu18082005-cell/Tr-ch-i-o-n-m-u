@@ -23,9 +23,9 @@ if errorlevel 1 goto failed
 >> "build\manifest.mf" echo Main-Class: vn.ptit.colorgame.Main
 >> "build\manifest.mf" echo Class-Path: lib/mysql-connector-j-8.3.0.jar
 >> "build\manifest.mf" echo.
-java -m jdk.jartool/sun.tools.jar.Main --create --file "dist\ColorDuel-MySQL.jar" --manifest "build\manifest.mf" -C "build\classes" .
+java -m jdk.jartool/sun.tools.jar.Main --create --file "dist\ColorDuel-30s.jar" --manifest "build\manifest.mf" -C "build\classes" .
 if errorlevel 1 goto failed
-echo Da bien dich thanh cong: dist\ColorDuel-MySQL.jar
+echo Da bien dich thanh cong: dist\ColorDuel-30s.jar
 goto end
 :nojava
 echo Chua tim thay Java. Hay cai JDK 17 tro len va them Java vao PATH.

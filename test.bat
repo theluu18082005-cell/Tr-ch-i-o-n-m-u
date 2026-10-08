@@ -13,6 +13,12 @@ java -Dfile.encoding=UTF-8 -m jdk.compiler/com.sun.tools.javac.Main -encoding UT
 if errorlevel 1 goto end
 java -Dfile.encoding=UTF-8 -cp "build\classes;build\test-classes" vn.ptit.colorgame.IntegrationTest
 if errorlevel 1 goto end
+java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.AudioManagerTest
+if errorlevel 1 goto end
+java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.ClientAudioTest
+if errorlevel 1 goto end
+java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.SettingsTest
+if errorlevel 1 goto end
 java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.UiSmokeTest
 if errorlevel 1 goto end
 java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.GuiNetworkTest

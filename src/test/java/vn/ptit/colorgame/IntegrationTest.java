@@ -102,7 +102,7 @@ public final class IntegrationTest {
     public static void main(String[] args) throws Exception {
         wireChecks();
         Path data = Files.createTempDirectory("color-duel-test-"), recovery = Files.createTempDirectory("color-duel-recovery-");
-        // Giữ đúng 15 giây; chỉ rút heartbeat để kiểm tra đứt mạng nhanh.
+        // Giữ đúng thời gian lượt của bản chạy thật; chỉ rút heartbeat để kiểm tra đứt mạng nhanh.
         GameServer server = new GameServer(0, data, Rules.TURN_MILLIS, 1800);
         server.start();
         try (Peer a = new Peer(server.port(), "alice"); Peer b = new Peer(server.port(), "bob"); Peer c = new Peer(server.port(), "carol")) {
@@ -127,7 +127,8 @@ public final class IntegrationTest {
             b.send("RESPOND", invitation[1], "NO"); b.await("INVITE_CLOSED"); a.await("INVITE_CLOSED");
             check(true, "Mời, từ chối và chặn lời mời chồng chéo");
             String[] room = start(a, b), t = turn(a, b);
-            check(Integer.parseInt(t[4]) > 14000 && Integer.parseInt(t[4]) <= 15000, "Lượt thật bắt đầu với thời lượng 15 giây");
+            check(Integer.parseInt(t[4]) > Rules.TURN_MILLIS - 1000 && Integer.parseInt(t[4]) <= Rules.TURN_MILLIS,
+                    "Lượt thật bắt đầu với thời lượng " + Rules.TURN_MILLIS / 1000 + " giây");
             Peer playing = t[3].equals(a.user) ? a : b, waiting = playing == a ? b : a;
             c.send("GUESS", room[1], t[2], "012345"); c.error("GUESS");
             waiting.send("GUESS", room[1], t[2], "012345"); waiting.error("GUESS");
@@ -141,9 +142,10 @@ public final class IntegrationTest {
             playing.error("GUESS"); t = turn(a, b);
             check(new Store(data).matches.get(0).moves.size() == 1 && t[3].equals(waiting.user), "Gửi trùng không tính hai lượt, sau đó đổi người chơi");
             long before = System.nanoTime();
-            String[] timeout1 = a.await(m -> m[0].equals("MOVE") && m[6].equals("TIMEOUT"), 20000);
+            String[] timeout1 = a.await(m -> m[0].equals("MOVE") && m[6].equals("TIMEOUT"), Rules.TURN_MILLIS + 5000);
             String[] timeout2 = b.await(m -> m[0].equals("MOVE") && m[6].equals("TIMEOUT"), 2000);
-            check(Arrays.equals(timeout1, timeout2) && System.nanoTime() - before > TimeUnit.SECONDS.toNanos(13), "Hết 15 giây tự động ghi lượt bỏ qua và đồng bộ hai máy");
+            check(Arrays.equals(timeout1, timeout2) && System.nanoTime() - before > TimeUnit.MILLISECONDS.toNanos(Rules.TURN_MILLIS - 2000),
+                    "Hết " + Rules.TURN_MILLIS / 1000 + " giây tự động ghi lượt bỏ qua và đồng bộ hai máy");
             t = turn(a, b);
             List<String> candidates = permutations();
             int initialScore = Integer.parseInt(move1[5]); candidates.removeIf(p -> Rules.score(p, wrong) != initialScore);

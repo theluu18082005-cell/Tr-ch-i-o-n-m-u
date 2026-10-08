@@ -1,0 +1,77 @@
+[
+  {
+    "date": "2026-10-08",
+    "theme": "custom Neon Arcade Arena",
+    "genre": "atmospheric arcade",
+    "macrostructure": "native arena workbench: opposed HUD, centered energy deck, responsive combat log",
+    "branch": "redesign/neon-arcade-arena",
+    "critique": {
+      "philosophy": 5,
+      "hierarchy": 4,
+      "execution": 4,
+      "specificity": 5,
+      "restraint": 4,
+      "variety": 4
+    },
+    "review": [
+      "Actual Swing renders inspected at all three sizes",
+      "Native 800x640 window displayed and component render captured; no capture of other applications",
+      "Action bounds/clipping assertions, contrast assertions, result/rematch state assertions pass",
+      "Custom tokens and roman typography; no browser chrome; no invented in-app metrics"
+    ],
+    "slop_test": {
+      "status": "applicable native gates reviewed; no claim of 58 web gates passing",
+      "not_applicable": "CSS/DOM/SEO/mobile marketing layouts, web nav/footer and browser-specific mechanics",
+      "user_overrides": "Neon game glow, bitmap arena and desktop viewports explicitly required"
+    },
+    "tests": {
+      "IntegrationTest": 59,
+      "MySqlIntegrationTest": 9,
+      "UiSmokeTest": "passed",
+      "GuiNetworkTest": "passed: three localhost TCP clients",
+      "AnimationPerformanceTest": "passed headless 1200x840 and native 800x640"
+    },
+    "native_performance": "mode=native size=800x640 frames=78 paint_median_ms=15.05 paint_p95_ms=22.89 edt_queue_p95_ms=27.14 orb_cache=18",
+    "headless_performance": "mode=headless size=1200x840 frames=78 paint_median_ms=23.40 paint_p95_ms=30.50 edt_queue_p95_ms=0.18 orb_cache=18",
+    "screenshots": "build/ui-neon",
+    "backend_hashes_unchanged": "8/8",
+    "jar_sha256": "e5c93fb65d6f18e1a1376b7ffe198283bfa39b2b063e8aa205662e53682341f9"
+  },
+  {
+    "date": "2026-10-08",
+    "iteration": "polish + audio",
+    "theme": "custom Neon Arcade Arena",
+    "macrostructure": "native arena workbench, opposed HUD and battle feed",
+    "critique": {
+      "philosophy": 5,
+      "hierarchy": 4,
+      "execution": 4,
+      "specificity": 5,
+      "restraint": 4,
+      "variety": 4
+    },
+    "review": [
+      "Actual Swing renders read at all three sizes",
+      "Removed stale roster table header gap",
+      "Fixed replay CTA caption clipping, kept assertions for full captions",
+      "Native JFrame displayed, component render captured; no screen capture of other apps",
+      "Preserved server fields/models/rules/deadline and dirty changes"
+    ],
+    "slop_test": "Native applicable gates reviewed; browser CSS/DOM/SEO gates N/A, no 58/58 claim",
+    "tests": {
+      "IntegrationTest": 57,
+      "MySqlIntegrationTest": 9,
+      "UiSmokeTest": "passed",
+      "GuiNetworkTest": "passed, three localhost clients",
+      "AudioManagerTest": 74,
+      "ClientAudioTest": "passed",
+      "audio_device": "76 checks, 14/14 native Clip, playback frames advance and ambient loop/stop work; listening review not performed",
+      "AnimationPerformanceTest": "passed headless and native"
+    },
+    "native_performance": "mode=native size=800x640 frames=78 paint_median_ms=12.15 paint_p95_ms=14.27 edt_queue_p95_ms=26.15 orb_cache=18",
+    "headless_performance": "mode=headless size=1200x840 frames=78 paint_median_ms=19.67 paint_p95_ms=24.31 edt_queue_p95_ms=0.12 orb_cache=18",
+    "screenshots": "build/ui-polish",
+    "backend_hashes_unchanged": "8/8 this turn",
+    "jar_sha256": "a1205c42e1fb9dd172bf9dee0ade4a2067675eb6a9543a6301784974ecd29808"
+  }
+]

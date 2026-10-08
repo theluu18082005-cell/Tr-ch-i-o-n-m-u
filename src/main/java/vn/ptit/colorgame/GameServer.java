@@ -42,7 +42,7 @@ public final class GameServer implements AutoCloseable {
         this(port, directory, Rules.TURN_MILLIS, Rules.HEARTBEAT_MILLIS);
     }
 
-    // Thời gian ngắn chỉ được truyền bởi bộ kiểm thử; bản chạy thật luôn dùng 15 giây.
+    // Thời gian ngắn chỉ được truyền bởi bộ kiểm thử; bản chạy thật dùng Rules.TURN_MILLIS.
     GameServer(int port, Path directory, int turnMillis, int heartbeatMillis) throws IOException {
         this.turnMillis = turnMillis; this.heartbeatMillis = heartbeatMillis;
         Files.createDirectories(directory);
@@ -73,7 +73,7 @@ public final class GameServer implements AutoCloseable {
         log("Server TCP đang nghe 0.0.0.0:" + port());
         log("Dữ liệu: " + store.directory);
         log("Lưu trữ: " + store.storageDescription());
-        log("Mỗi lượt 15 giây; không giới hạn số lượt. Ctrl+C để dừng server.");
+        log("Mỗi lượt " + turnMillis / 1000 + " giây; không giới hạn số lượt. Ctrl+C để dừng server.");
         Thread accept = new Thread(() -> {
             while (!closing.get()) {
                 try {

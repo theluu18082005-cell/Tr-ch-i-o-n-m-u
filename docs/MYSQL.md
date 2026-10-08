@@ -4,7 +4,7 @@ MySQL Server lưu dữ liệu; MySQL Workbench là ứng dụng để xem và qu
 
 1. Bật dịch vụ **MySQL80** trong Windows Services.
 2. Điền thông tin vào `data/mysql.properties` (có mẫu `mysql.properties.example`): host `127.0.0.1`, port `3306`, database `color_duel`, tài khoản và mật khẩu MySQL của bạn. Mật khẩu này là mật khẩu MySQL, không phải mật khẩu đăng nhập game.
-3. Giữ file `dist/lib/mysql-connector-j-8.3.0.jar` cạnh `dist/ColorDuel-MySQL.jar`. Chạy `build.bat` nếu đã sửa code rồi mở `run-server.bat`.
+3. Giữ file `dist/lib/mysql-connector-j-8.3.0.jar` cạnh `dist/ColorDuel-30s.jar`. Chạy `build.bat` nếu đã sửa code rồi mở `run-server.bat`.
 4. Server in dòng `Lưu trữ: jdbc:mysql://127.0.0.1:3306/color_duel` khi kết nối thành công.
 5. Mở kết nối tương ứng trong Workbench, bấm Refresh trong **SCHEMAS**, chọn `color_duel`. Có thể chạy:
 
