@@ -44,12 +44,35 @@ public final class GuiNetworkTest {
             until(() -> ((DefaultTableModel) field(alice, "onlineModel")).getRowCount() == 3
                     && ((DefaultTableModel) field(bob, "onlineModel")).getRowCount() == 3
                     && ((DefaultTableModel) field(carol, "onlineModel")).getRowCount() == 3, "Ba cửa sổ đăng ký và cùng thấy danh sách online");
+            edt(() -> { java.lang.reflect.Method logout=GameClient.class.getDeclaredMethod("logout"); logout.setAccessible(true); logout.invoke(carol); return null; });
+            until(() -> ((DefaultTableModel)field(alice,"onlineModel")).getRowCount()==2,"Logout removed test account from online list");
+            edt(() -> {
+                ((JButton)field(carol,"showLogin")).doClick(); ((JTextField)field(carol,"username")).setText("carol");
+                ((JPasswordField)field(carol,"password")).setText("matkhau123"); ((JButton)field(carol,"login")).doClick(); return null;
+            });
+            until(() -> field(carol,"me").equals("carol"),"Existing account logs in through redesigned form");
+            until(() -> ((DefaultTableModel)field(alice,"onlineModel")).getRowCount()==3,"Login synchronized with lobby");
             edt(() -> {
                 JTable table = (JTable) field(alice, "onlineTable");
                 for (int i = 0; i < table.getRowCount(); i++) if (table.getValueAt(i, 0).equals("bob")) table.setRowSelectionInterval(i, i);
                 ((JButton) field(alice, "inviteButton")).doClick(); return null;
             });
             until(() -> ((JPanel) field(bob, "invitationPanel")).isVisible(), "Đối thủ hiển thị lời mời");
+            until(() -> ((JPanel) field(alice, "invitationPanel")).isVisible()
+                    && ((JButton) field(alice, "cancelInvite")).isEnabled()
+                    && !((JButton) field(alice, "inviteButton")).isEnabled(), "Người gửi có thẻ lời mời và không thể mời trùng");
+            edt(() -> { ((JButton) field(alice, "cancelInvite")).doClick(); return null; });
+            until(() -> !((JPanel) field(alice, "invitationPanel")).isVisible()
+                    && !((JPanel) field(bob, "invitationPanel")).isVisible()
+                    && ((JButton) field(alice, "inviteButton")).isEnabled(), "Hủy lời mời đồng bộ trên cả hai client");
+            edt(() -> { ((JButton) field(alice, "inviteButton")).doClick(); return null; });
+            until(() -> ((JPanel) field(bob, "invitationPanel")).isVisible(), "Đối thủ nhận được lời mời mới sau khi hủy");
+            edt(() -> { ((JButton) field(bob, "rejectInvite")).doClick(); return null; });
+            until(() -> !((JPanel) field(alice, "invitationPanel")).isVisible()
+                    && !((JPanel) field(bob, "invitationPanel")).isVisible()
+                    && ((JButton) field(alice, "inviteButton")).isEnabled(), "Từ chối lời mời đóng thẻ và mở lại thao tác mời");
+            edt(() -> { ((JButton) field(alice, "inviteButton")).doClick(); return null; });
+            until(() -> ((JPanel) field(bob, "invitationPanel")).isVisible(), "Lời mời sẵn sàng để chấp nhận vào trận");
             edt(() -> { ((JButton) field(bob, "acceptInvite")).doClick(); return null; });
             until(() -> (int) field(alice, "turn") == 1 && (int) field(bob, "turn") == 1, "Hai cửa sổ vào phòng và nhận lượt");
             String secret = new Store(data).matches.get(0).secret;
@@ -61,10 +84,12 @@ public final class GuiNetworkTest {
             until(() -> !(boolean) field(alice, "active") && !(boolean) field(bob, "active"), "Gửi bằng nút thật cập nhật kết quả thắng thua trên hai cửa sổ");
             until(() -> ((DefaultTableModel) field(alice, "movesModel")).getRowCount() == 1
                     && ((DefaultTableModel) field(bob, "movesModel")).getValueAt(0, 3).equals("6/6"), "Lịch sử hiển thị dự đoán chính xác 6/6");
+            until(() -> ((JPanel)field(alice,"resultScreen")).isVisible() && ((JPanel)field(bob,"resultScreen")).isVisible(),"Victory and Defeat screens shown from real server results");
             edt(() -> { ((JButton) field(alice, "replay")).doClick(); ((JButton) field(bob, "replay")).doClick(); return null; });
             until(() -> (boolean) field(alice, "active") && (boolean) field(bob, "active")
                     && ((DefaultTableModel) field(alice, "movesModel")).getRowCount() == 0, "Nút Chơi lại tạo trận mới và xóa bảng lượt cũ");
             until(() -> ((DefaultTableModel) field(carol, "onlineModel")).getRowCount() == 3, "Client thứ ba vẫn kết nối tại sảnh");
+            until(() -> !((JPanel)field(alice,"resultScreen")).isVisible() && !((JPanel)field(bob,"resultScreen")).isVisible(),"Rematch restores orb deck instead of stale results");
         } finally {
             GameClient ca = a, cb = b, cc = c;
             edt(() -> { if (ca != null) ca.shutdown(); if (cb != null) cb.shutdown(); if (cc != null) cc.shutdown(); return null; });

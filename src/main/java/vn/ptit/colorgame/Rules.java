@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 /** Luật dùng chung; server luôn kiểm tra lại mọi dữ liệu từ client. */
 public final class Rules {
     public static final int PORT = 5000;
-    public static final int TURN_MILLIS = 15_000;
+    public static final int TURN_MILLIS = 30_000;
     public static final int HEARTBEAT_MILLIS = 35_000;
     public static final String[] COLOR_NAMES = {"Đỏ", "Xanh lá", "Xanh dương", "Vàng", "Tím", "Cam"};
 

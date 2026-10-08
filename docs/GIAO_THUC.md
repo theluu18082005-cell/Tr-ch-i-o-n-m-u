@@ -97,7 +97,7 @@ GUESS mang cả mã trận và số lượt để một yêu cầu cũ, gửi ch
 
 ## Đồng hồ và mất kết nối
 
-Server dùng System.nanoTime cho deadline 15 giây, không phụ thuộc thay đổi đồng hồ hệ điều hành. Vòng kiểm tra chạy mỗi 100 ms; thông báo chuyển lượt có thể trễ một khoảng nhỏ do lịch CPU/I/O. TICK cập nhật khoảng mỗi giây. Client đếm theo số millisecond server gửi; thời điểm nhận có thể trễ do mạng nên quyết định hợp lệ cuối cùng luôn thuộc server.
+Server dùng System.nanoTime cho deadline 30 giây, không phụ thuộc thay đổi đồng hồ hệ điều hành. Vòng kiểm tra chạy mỗi 100 ms; thông báo chuyển lượt có thể trễ một khoảng nhỏ do lịch CPU/I/O. TICK cập nhật khoảng mỗi giây. Client đếm theo số millisecond server gửi; thời điểm nhận có thể trễ do mạng nên quyết định hợp lệ cuối cùng luôn thuộc server.
 
 Client gửi PING mỗi 5 giây. Server kiểm tra 35 giây không nhận thông điệp và đóng phiên nếu quá hạn; socket còn có read timeout. Khi có TCP FIN/RST thì reader phát hiện sớm hơn. Nếu cả hai cùng mất mạng, sự kiện server xử lý trước là người bị tính rời trận trước; đây là giới hạn phân xử của phiên bản này.
 

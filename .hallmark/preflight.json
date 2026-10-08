@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-08",
+  "scope": "in-place Java 17 Swing/Java2D redesign",
+  "project": "E:\\Năm 4\\Kì 1\\Lập trình mạng\\ColorDuel_Java_TCP_Nhom4\\ColorDuel",
+  "primary_skill": "hallmark",
+  "secondary_skill": "design-taste-frontend",
+  "approved_theme": "custom Neon Arcade Arena",
+  "genre": "atmospheric arcade",
+  "macrostructure": "native arena workbench: opposed HUD, centered energy deck, responsive combat log",
+  "audit": [
+    "Previous battle pane stretched orb slots; compact outer scroll hid controls",
+    "Invitation below opponent card could be offscreen",
+    "Ranking lacked top-three hierarchy",
+    "History required horizontal scrolling to see outcome",
+    "Auth compact form needed space for validation feedback"
+  ],
+  "preservation": [
+    "Existing dirty work snapshot in build/neon-baseline",
+    "Dedicated branch redesign/neon-arcade-arena, same E checkout",
+    "Eight backend source hashes identical",
+    "No production data or database config writes"
+  ],
+  "files_modified": [
+    "src/main/java/vn/ptit/colorgame/GameTheme.java",
+    "src/main/java/vn/ptit/colorgame/GameClient.java",
+    "src/main/java/vn/ptit/colorgame/LobbyStyle.java",
+    "src/test/java/vn/ptit/colorgame/UiSmokeTest.java",
+    "src/test/java/vn/ptit/colorgame/GuiNetworkTest.java",
+    "docs/DESIGN.md",
+    "README.md",
+    "dist/ColorDuel-30s.jar"
+  ],
+  "files_created": [
+    "src/test/java/vn/ptit/colorgame/AnimationPerformanceTest.java",
+    ".hallmark/preflight.json",
+    ".hallmark/log.json"
+  ],
+  "files_deleted": [],
+  "viewports": [
+    [
+      1200,
+      840
+    ],
+    [
+      1040,
+      680
+    ],
+    [
+      800,
+      640
+    ]
+  ],
+  "motion_families": [
+    "ambient energy",
+    "short action feedback",
+    "match-state feedback"
+  ],
+  "tokens": "GameTheme.java: semantic final Color roles, shared font/display/mono factories",
+  "native_adaptations": [
+    "No HTML/CSS/mobile-web/SEO gates; Java Swing constraint authoritative",
+    "Use existing arena bitmap and cached Java2D orb sprites",
+    "Same family across app views rather than per-screen marketing structures"
+  ],
+  "polish_audio": {
+    "date": "2026-10-08",
+    "scope": "same E checkout, presentation polish and additive audio",
+    "audit": [
+      "auth form stretched",
+      "lobby header tall and table-like roster",
+      "battle log table-like, CTA weak",
+      "results need stronger summary/CTA"
+    ],
+    "files_modified": [
+      "GameClient.java",
+      "GameTheme.java",
+      "LobbyStyle.java",
+      "UiSmokeTest.java",
+      "test.bat",
+      "test.sh",
+      "README.md",
+      "docs/DESIGN.md",
+      "dist/ColorDuel-30s.jar"
+    ],
+    "files_created": [
+      "AudioManager.java",
+      "AudioManagerTest.java",
+      "ClientAudioTest.java",
+      "tools/generate_audio.py",
+      "src/main/resources/audio/*.wav",
+      "docs/AUDIO.md",
+      "docs/POLISH_AUDIO_REPORT.md"
+    ],
+    "files_deleted": [],
+    "protected_sources": "8/8 hashes unchanged relative to this turn snapshot",
+    "screenshots": "build/ui-polish",
+    "audio_policy": "worker only; WAV cache; missing mixer safe; separate effects/music toggles"
+  },
+  "settings_banner_fix": {
+    "scope": "native component refinement within locked Neon Arcade theme",
+    "critique": {
+      "philosophy": 5,
+      "hierarchy": 4,
+      "execution": 4,
+      "specificity": 5,
+      "restraint": 4,
+      "variety": 4
+    },
+    "audit": [
+      "ambient attenuated -20dB and mostly bass tones",
+      "settings controls lacked feedback/preview",
+      "banner bitmap limited to rightmost 420px"
+    ],
+    "implementation": [
+      "single shared settings popup opened from four screens",
+      "two volume controls and previews with async mixer status",
+      "midrange original music loop, 45% default when enabled",
+      "full-width cached banner and continuous dark scrim"
+    ],
+    "tests": "docs/AUDIO.md, build/ui-settings",
+    "backend_hashes": "8/8 unchanged",
+    "jar_sha256": "92e25cf320f5ecc7b5a1214fd7b37d7d458883b66f5630910ed2e3336f0a4f9f"
+  }
+}

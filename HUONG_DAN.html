@@ -11,7 +11,7 @@ code{font:14px/1.65 Consolas,"Courier New",monospace;background:#eef3f8;padding:
 @media(max-width:1000px){.shell{display:block;padding:16px}nav{position:static;max-height:none;margin-bottom:22px}nav a{display:inline-block;margin-right:18px}main{padding:24px}h1{font-size:28px}}
 @media print{body{background:white;font-size:11pt}.shell{display:block;padding:0;max-width:none}nav{display:none}main{border:0;padding:0}h1{font-size:24pt}h2{font-size:17pt;page-break-after:avoid}pre{background:#f4f4f4;color:black;white-space:pre-wrap}table{font-size:10pt}tr{break-inside:avoid}a{color:black}img{max-height:600px;object-fit:contain}}
 </style></head><body><div class="shell"><nav><strong>COLOR DUEL</strong><a href="HUONG_DAN.html">Hướng dẫn bắt đầu</a><a href="#nhung-gi-da-co">Những gì đã có</a><a href="#chuan-bi-tren-moi-may">Chuẩn bị trên mỗi máy</a><a href="#chay-thu-tren-mot-may">Chạy thử trên một máy</a><a href="#chay-tren-bon-may">Chạy trên bốn máy</a><a href="#cach-choi-tren-giao-dien">Cách chơi trên giao diện</a><a href="#quy-tac-xu-ly-bo-sung">Quy tắc xử lý bổ sung</a><a href="#du-lieu-nam-o-dau">Dữ liệu nằm ở đâu</a><a href="#mo-va-sua-ma-nguon">Mở và sửa mã nguồn</a><a href="#goi-y-phan-cong-nhom-bon-nguoi">Gợi ý phân công nhóm bốn người</a><a href="#kich-ban-demo-truoc-khi-nop">Kịch bản demo trước khi nộp</a><a href="#cac-loi-thuong-gap">Các lỗi thường gặp</a><a href="#neu-cac-thanh-vien-o-khac-nha">Nếu các thành viên ở khác nhà</a><a href="#pham-vi-da-xac-minh">Phạm vi đã xác minh</a></nav><main><h1 id="huong-dan-chay-game-doan-day-mau-doi-khang-online">Hướng dẫn chạy game đoán dãy màu đối kháng online</h1><p><strong>Bản giao diện 1.1 ngày 21/09/2026.</strong> Màn hình đăng nhập và sảnh có hình minh họa riêng, phòng chơi có avatar, ô màu hiệu ứng khối và đồng hồ vòng tròn. Hình ảnh được đóng gói sẵn trong chương trình.</p><p><strong>Giữ tài khoản cũ:</strong> dừng server/client, giải nén bản mới vào thư mục riêng, sao chép thư mục <code>data</code> của bản cũ sang thư mục <code>ColorDuel</code> mới, rồi chạy <code>demo-1may.bat</code>. Chi tiết trong <code>CAP_NHAT_GIAO_DIEN.txt</code>.</p><p><img alt="Giao diện đăng nhập mới" src="docs/images/login.png"></p>
-<p>Bộ chương trình này triển khai đề tài trong file <strong>Game_doan_day_mau_doi_khang_online.docx</strong>: hai người chơi <strong>luân phiên</strong>, mỗi lượt <strong>15 giây</strong>, cùng đoán một dãy gồm sáu màu khác nhau. Server giữ dãy bí mật, xử lý luật và lưu dữ liệu; client cung cấp giao diện để đăng nhập, mời đấu, sắp xếp màu và xem kết quả.</p>
+<p>Bộ chương trình này triển khai đề tài trong file <strong>Game_doan_day_mau_doi_khang_online.docx</strong>: hai người chơi <strong>luân phiên</strong>, mỗi lượt <strong>30 giây</strong>, cùng đoán một dãy gồm sáu màu khác nhau. Server giữ dãy bí mật, xử lý luật và lưu dữ liệu; client cung cấp giao diện để đăng nhập, mời đấu, sắp xếp màu và xem kết quả.</p>
 <p>Nhóm có thể dùng <strong>một máy server và ba máy client</strong>. Hai client đang chơi một trận, client thứ ba ở sảnh và có thể mời người rỗi. Server là một chương trình Java chạy trên laptop bình thường. Khi phát triển, một laptop cũng có thể mở một server và nhiều cửa sổ client để thử.</p>
 <p>Tài liệu đi kèm: <a href="docs/GIAO_THUC.html">Đặc tả giao thức TCP</a> · <a href="docs/KIEM_THU.html">Kết quả kiểm thử</a>.</p><h2 id="nhung-gi-da-co">Những gì đã có</h2>
 <div class="table-wrap"><table><thead><tr><th>Yêu cầu</th><th>Cách chương trình thực hiện</th></tr></thead><tbody>
@@ -21,7 +21,7 @@ code{font:14px/1.65 Consolas,"Courier New",monospace;background:#eef3f8;padding:
 <tr><td>Phòng chơi</td><td>Đúng hai người; mỗi phòng có dãy bí mật và trạng thái riêng</td></tr>
 <tr><td>Sáu màu cố định</td><td>Đỏ, Xanh lá, Xanh dương, Vàng, Tím, Cam; mỗi màu dùng một lần</td></tr>
 <tr><td>Thao tác chọn màu</td><td>Bấm màu để điền vào ô trống; bấm hai ô để đổi chỗ</td></tr>
-<tr><td>Lượt và thời gian</td><td>Luân phiên, 15 giây/lượt do server quyết định; hết giờ tự chuyển lượt</td></tr>
+<tr><td>Lượt và thời gian</td><td>Luân phiên, 30 giây/lượt do server quyết định; hết giờ tự chuyển lượt</td></tr>
 <tr><td>Lịch sử chung</td><td>Cả hai thấy người đoán, dãy dự đoán, số vị trí đúng và lượt hết giờ</td></tr>
 <tr><td>Kết quả</td><td>Đúng 6 vị trí thì thắng; thắng +1 điểm, thua +0; cập nhật số trận</td></tr>
 <tr><td>Thoát và mất mạng</td><td>Người rời phòng hoặc mất kết nối trong trận bị tính thua</td></tr>
@@ -94,7 +94,7 @@ code{font:14px/1.65 Consolas,"Courier New",monospace;background:#eef3f8;padding:
 <li>Để đổi thứ tự, bấm một ô rồi bấm ô khác; hai màu đổi chỗ. Bấm lại cùng ô đã chọn để bỏ màu, hoặc dùng nút <strong>Bỏ ô đang chọn</strong>. <strong>Xóa tất cả</strong> làm trống cả sáu ô.</li>
 <li>Bấm <strong>Gửi dự đoán</strong> khi đủ sáu màu. Server kiểm tra lượt và thời gian trước khi chấm.</li>
 <li>Cột <strong>Đúng</strong> chỉ cho biết số vị trí đúng, ví dụ <code>3/6</code>. Những con số nhỏ trong các ô màu là mã nhận biết màu theo bảng màu, không đánh dấu vị trí đúng.</li>
-<li>Khi đang chờ đối thủ, các nút chọn màu và gửi bị khóa. Hết 15 giây mà chưa gửi, server ghi lượt hết giờ rồi chuyển lượt.</li>
+<li>Khi đang chờ đối thủ, các nút chọn màu và gửi bị khóa. Hết 30 giây mà chưa gửi, server ghi lượt hết giờ rồi chuyển lượt.</li>
 <li>Đúng <code>6/6</code> thì trận kết thúc. Chọn <strong>Chơi lại</strong>; khi cả hai cùng chọn, server bắt đầu ván mới. Hoặc chọn <strong>Trở về danh sách online</strong> để mời người khác.</li>
 <li><strong>Thoát phòng</strong> khi đang chơi có hộp thoại xác nhận và bị tính thua nếu đồng ý. Đóng ứng dụng giữa trận cũng có xác nhận.</li>
 </ol>
@@ -148,7 +148,7 @@ code{font:14px/1.65 Consolas,"Courier New",monospace;background:#eef3f8;padding:
 <li>Mở server và ba client trên bốn máy. Chỉ rõ IP server, cổng TCP và danh sách ba người online.</li>
 <li>Thử một lời mời bị từ chối, sau đó mời lại và chấp nhận.</li>
 <li>Hai người luân phiên gửi dự đoán. Chứng minh bảng lịch sử hai máy giống nhau, còn client thứ ba thấy họ đang bận.</li>
-<li>Để một lượt quá 15 giây: hai máy cùng thấy hết giờ và lượt chuyển sang người còn lại.</li>
+<li>Để một lượt quá 30 giây: hai máy cùng thấy hết giờ và lượt chuyển sang người còn lại.</li>
 <li>Dựa vào lịch sử để tìm đáp án; sau khi thắng, kiểm tra điểm, trận thắng và tổng số trận. Bộ kiểm thử tự động có một bộ giải dùng phản hồi công khai để kiểm tra trường hợp đoán đúng.</li>
 <li>Cả hai bấm Chơi lại: phòng/ván mới xuất hiện, lịch sử hiện tại được xóa.</li>
 <li>Một người bấm Thoát và xác nhận: đối thủ được tính thắng. Làm lại một ván và ngắt client để kiểm tra mất kết nối.</li>
