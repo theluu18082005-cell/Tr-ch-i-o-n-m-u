@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.lang.reflect.Field;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
@@ -76,14 +77,26 @@ public final class GuiNetworkTest {
             edt(() -> { ((JButton) field(bob, "acceptInvite")).doClick(); return null; });
             until(() -> (int) field(alice, "turn") == 1 && (int) field(bob, "turn") == 1, "Hai cửa sổ vào phòng và nhận lượt");
             String secret = new Store(data).matches.get(0).secret;
+            GameClient starter = edt(() -> field(alice,"current").equals("alice") ? alice : bob);
+            GameClient next = starter==alice ? bob : alice;
+            char[] wrong = secret.toCharArray(); char swap=wrong[0]; wrong[0]=wrong[1]; wrong[1]=swap;
+            String firstGuess=new String(wrong);
+            edt(() -> { for(char color:firstGuess.toCharArray()) starter.chooseColor(color-'0'); ((JButton)field(starter,"submit")).doClick(); return null; });
+            until(() -> (int)field(next,"turn")==2 && Arrays.equals((int[])field(next,"arrangement"),firstGuess.chars().map(c1 -> c1-'0').toArray())
+                    && ((JButton)field(next,"submit")).isEnabled(),"Opponent guess prefilled into next client with submit enabled");
+            swap=wrong[1]; wrong[1]=wrong[2]; wrong[2]=swap; String secondGuess=new String(wrong);
+            edt(() -> { next.clickSlot(1); next.clickSlot(2); ((JButton)field(next,"submit")).doClick(); return null; });
+            until(() -> (int)field(starter,"turn")==3 && Arrays.equals((int[])field(starter,"arrangement"),secondGuess.chars().map(c1 -> c1-'0').toArray())
+                    && ((JButton)field(starter,"submit")).isEnabled(),"Returning player receives latest opponent order instead of their older guess");
             edt(() -> {
                 GameClient player = field(alice, "current").equals("alice") ? alice : bob;
+                ((JButton)field(player,"clear")).doClick();
                 for (char color : secret.toCharArray()) player.chooseColor(color - '0');
                 ((JButton) field(player, "submit")).doClick(); return null;
             });
             until(() -> !(boolean) field(alice, "active") && !(boolean) field(bob, "active"), "Gửi bằng nút thật cập nhật kết quả thắng thua trên hai cửa sổ");
-            until(() -> ((DefaultTableModel) field(alice, "movesModel")).getRowCount() == 1
-                    && ((DefaultTableModel) field(bob, "movesModel")).getValueAt(0, 3).equals("6/6"), "Lịch sử hiển thị dự đoán chính xác 6/6");
+            until(() -> ((DefaultTableModel) field(alice, "movesModel")).getRowCount() == 3
+                    && ((DefaultTableModel) field(bob, "movesModel")).getValueAt(2, 3).equals("6/6"), "Lịch sử hiển thị dự đoán chính xác 6/6");
             until(() -> ((JPanel)field(alice,"resultScreen")).isVisible() && ((JPanel)field(bob,"resultScreen")).isVisible(),"Victory and Defeat screens shown from real server results");
             edt(() -> { ((JButton) field(alice, "replay")).doClick(); ((JButton) field(bob, "replay")).doClick(); return null; });
             until(() -> (boolean) field(alice, "active") && (boolean) field(bob, "active")

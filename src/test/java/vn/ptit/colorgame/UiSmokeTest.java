@@ -241,6 +241,8 @@ public final class UiSmokeTest {
                 check(!submit.isEnabled() && !((JButton[]) field(client, "slots"))[0].isEnabled(), "Khóa chọn màu và gửi khi đối thủ đến lượt");
                 client.onMessage(new String[]{"MOVE", id, "2", "bob", "103254", "4", "GUESS"});
                 client.onMessage(new String[]{"TURN", id, "3", "alice", "12000"});
+                check(java.util.Arrays.equals(arrangement,new int[]{1,0,3,2,5,4}) && submit.isEnabled(),
+                        "Lượt mới tự điền dự đoán vừa gửi của đối thủ và cho phép đổi vị trí/gửi");
                 screenshot(client, out.resolve("game.png"));
                 screenshot(client, out.resolve("game-small.png"), 1040, 680);
                 screenshot(client, out.resolve("game-compact.png"), 800, 640);

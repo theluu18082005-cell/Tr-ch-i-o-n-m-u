@@ -513,6 +513,13 @@ public final class GameClient extends JPanel {
             case "MOVE" -> {
                 if (!room.equals(m[1])) break;
                 boolean timeout = m[6].equals("TIMEOUT");
+                // MOVE precedes TURN on the server's TCP stream. Seed the next turn from
+                // the opponent's confirmed guess once; late duplicates must not undo edits.
+                if (active && m[3].equals(current) && !m[3].equals(me)
+                        && m[2].equals(Integer.toString(turn)) && m[6].equals("GUESS") && Rules.validGuess(m[4])) {
+                    for (int i = 0; i < arrangement.length; i++) arrangement[i] = m[4].charAt(i) - '0';
+                    selectedSlot = -1; updateBoard();
+                }
                 if(timeout && audioTimeouts.add(room+":"+m[2]+":"+m[3])) audio.play(AudioManager.Sound.TIMEOUT);
                 movesModel.addRow(new Object[]{m[2], name(m[3]), m[4], timeout ? "-" : m[5] + "/6", timeout ? "Hết " + Rules.TURN_MILLIS / 1000 + " giây" : "Đã gửi"});
                 resultLabel.setText(timeout ? (m[3].equals(me) ? "Bạn" : "Đối thủ") + " đã hết thời gian."

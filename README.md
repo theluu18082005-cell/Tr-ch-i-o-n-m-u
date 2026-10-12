@@ -4,6 +4,8 @@
 
 Bản polish có form đăng nhập gọn hơn, thẻ đối thủ arcade, Combat Log bằng orb, CTA và màn kết quả rõ hơn. Nút **Cài đặt** ở góc phải mở **Hiệu ứng âm thanh / Nhạc nền / Giảm hiệu ứng**, thanh âm lượng và hai nút nghe thử. Có 13 hiệu ứng WAV và hai bản nhạc đóng gói sẵn: nhẹ ở đăng nhập/sảnh, sôi động 120 BPM khi thi đấu; tự chuyển theo màn hình và nhạc mặc định tắt. Xem [hướng dẫn âm thanh](docs/AUDIO.md) và [kết quả polish, kiểm thử, ảnh thực](docs/POLISH_AUDIO_REPORT.md).
 
+Khi đối thủ gửi dự đoán, bàn sắp xếp tự điền đúng thứ tự dãy màu vừa gửi để bạn tiếp tục đổi vị trí ở lượt kế tiếp. Cập nhật đồng hồ không ghi đè thao tác đang chỉnh; nếu đối thủ hết giờ và không có dự đoán, bàn giữ dãy hiện tại. Ván mới bắt đầu với bàn trống.
+
 Mở lại `run-client.bat` để dùng bản đã cập nhật. Chi tiết thiết kế, kiểm thử và ảnh trước/sau: [docs/DESIGN.md](docs/DESIGN.md#neon-arcade-arena--bản-redesign-08102026).
 
 Game đoán dãy màu đối kháng online cho bài tập lớn Lập trình mạng. Java 17, TCP Socket, giao diện Swing. Server dùng MySQL khi có `data/mysql.properties`; xem [hướng dẫn MySQL](docs/MYSQL.md). Nếu không có file cấu hình này, server dùng dữ liệu file như bản trước.
