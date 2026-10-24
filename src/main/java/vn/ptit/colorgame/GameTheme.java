@@ -396,6 +396,29 @@ public final class GameTheme {
             p.drawString(caption,(w-p.getFontMetrics().stringWidth(caption))/2,h-11); p.dispose();
         }
     }
+    /** A private hypothesis, deliberately distinct from the large submitted orbs. */
+    public static final class NoteSlot extends JButton {
+        private final int position;
+        private int color=-1;
+        public NoteSlot(int position) {
+            this.position=position; setOpaque(false); setContentAreaFilled(false); setBorderPainted(false); setFocusPainted(false);
+            setPreferredSize(new Dimension(110,40)); setMinimumSize(new Dimension(110,40)); setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); state(-1);
+        }
+        public void state(int value) {
+            color=value;
+            String description="Ghi chú riêng, vị trí "+(position+1)+": "+(color<0 ? "Chưa rõ" : Rules.COLOR_NAMES[color]);
+            getAccessibleContext().setAccessibleName(description); setToolTipText(description+". Bấm để chọn màu."); repaint();
+        }
+        @Override protected void paintComponent(Graphics g) {
+            Graphics2D p=graphics(g); int w=getWidth(),h=getHeight();
+            p.setColor(getModel().isRollover() ? RAISED : INPUT); p.fillRoundRect(1,1,w-2,h-2,8,8);
+            p.setColor(hasFocus() ? GOLD : LINE); p.drawRoundRect(1,1,w-3,h-3,8,8);
+            if(color>=0) orb(p,color,9,(h-18)/2f,18);
+            else { p.setColor(MUTED); p.setFont(font(17,true)); p.drawString("?",13,h/2+6); }
+            p.setColor(MUTED); p.setFont(font(9,true)); p.drawString("VỊ TRÍ "+(position+1),34,13);
+            p.setColor(color<0 ? MUTED : TEXT); p.setFont(font(11,true)); p.drawString(color<0 ? "Chưa rõ" : Rules.COLOR_NAMES[color],34,29); p.dispose();
+        }
+    }
     public static final class PaletteButton extends JButton {
         private final int color;
         private boolean used;
@@ -539,7 +562,7 @@ public final class GameTheme {
     }
     /** A centered energy deck instead of six stretched form fields. */
     public static final class OrbRack extends JPanel {
-        public OrbRack(Component slots) { setOpaque(false); setLayout(null); add(slots); }
+        public OrbRack(Component slots) { setOpaque(false); setLayout(null); setPreferredSize(new Dimension(1,136)); setMinimumSize(new Dimension(1,96)); add(slots); }
         @Override public void doLayout() { int height=Math.min(192,getHeight()); getComponent(0).setBounds(0,(getHeight()-height)/2,getWidth(),height); }
         @Override protected void paintComponent(Graphics g) {
             Graphics2D p=graphics(g); int w=getWidth(),h=getHeight();
@@ -558,7 +581,7 @@ public final class GameTheme {
                 Component heading=border.getLayoutComponent(BorderLayout.NORTH); if(heading!=null) heading.setVisible(w>=1050);
             }
             if(w>=1050) { int side=Math.min(370,w/3); getComponent(0).setBounds(0,0,w-side-16,Math.min(h,480)); getComponent(1).setBounds(w-side,0,side,h); }
-            else { int main=Math.min(360,Math.max(320,h-120)); getComponent(0).setBounds(0,0,w,main); getComponent(1).setBounds(0,main+12,w,Math.max(0,h-main-12)); }
+            else { int main=Math.min(370,Math.max(330,h-120)); getComponent(0).setBounds(0,0,w,main); getComponent(1).setBounds(0,main+12,w,Math.max(0,h-main-12)); }
         }
     }
     /** Painted above the client; never creates input-blocking components or changes game state. */

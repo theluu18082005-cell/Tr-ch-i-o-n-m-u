@@ -58,6 +58,11 @@ public final class UiSmokeTest {
             }
         }
         settingBounds(client,client);
+        JButton[] notes=(JButton[])field(client,"noteSlots");
+        for(JButton note:notes) if(visibleWithin(note,client)) {
+            Rectangle bounds=SwingUtilities.convertRectangle(note.getParent(),note.getBounds(),client);
+            check(note.getWidth()>=110 && note.getHeight()>=38 && new Rectangle(0,0,client.getWidth(),client.getHeight()).contains(bounds),"Private note readable and reachable");
+        }
         JButton[] slots=(JButton[])field(client,"slots");
         if(slots[0]!=null && visibleWithin(slots[0],client)) for(JButton slot:slots) check(slot.getWidth()>=76 && slot.getHeight()>=96,"Six-orb deck remains legible");
     }
@@ -243,6 +248,9 @@ public final class UiSmokeTest {
                 client.onMessage(new String[]{"TURN", id, "3", "alice", "12000"});
                 check(java.util.Arrays.equals(arrangement,new int[]{1,0,3,2,5,4}) && submit.isEnabled(),
                         "Lượt mới tự điền dự đoán vừa gửi của đối thủ và cho phép đổi vị trí/gửi");
+                JButton[] noteSlots=(JButton[])field(client,"noteSlots");
+                noteSlots[0].doClick(0); ((JMenuItem)((JPopupMenu)field(client,"noteMenu")).getComponent(2)).doClick(0);
+                noteSlots[2].doClick(0); ((JMenuItem)((JPopupMenu)field(client,"noteMenu")).getComponent(4)).doClick(0);
                 screenshot(client, out.resolve("game.png"));
                 screenshot(client, out.resolve("game-small.png"), 1040, 680);
                 screenshot(client, out.resolve("game-compact.png"), 800, 640);

@@ -63,6 +63,10 @@ public final class GameClient extends JPanel {
     private final JLabel resultLabel = new GameTheme.Notice(" "), replayLabel = label("", 13, GameTheme.MUTED);
     private final JProgressBar clock = new JProgressBar(0, Rules.TURN_MILLIS);
     private final JButton[] palette = new JButton[6], slots = new JButton[6];
+    private final int[] positionNotes = {-1,-1,-1,-1,-1,-1};
+    private final GameTheme.NoteSlot[] noteSlots = new GameTheme.NoteSlot[6];
+    private final JButton clearNotes=button("Xóa ghi chú");
+    private final JPopupMenu noteMenu=new JPopupMenu();
     private final int[] arrangement = {-1, -1, -1, -1, -1, -1};
     private final JButton submit = button("Gửi dự đoán"), clear = button("Xóa tất cả"), remove = button("Bỏ ô đang chọn");
     private final JButton leave = button("Thoát phòng"), replay = button("Chơi lại"), back = button("Trở về danh sách online");
@@ -364,10 +368,10 @@ public final class GameClient extends JPanel {
         header.add(duel,BorderLayout.CENTER); page.add(header,BorderLayout.NORTH);
 
         GameTheme.RoundPanel board=new GameTheme.BattlePanel(); guessBoard=board; board.setName("guess-board");
-        board.setEdge(GameTheme.ACCENT); board.setLayout(new BorderLayout(0,8)); board.setBorder(new EmptyBorder(12,16,12,16));
+        board.setEdge(GameTheme.ACCENT); board.setLayout(new BorderLayout(0,2)); board.setBorder(new EmptyBorder(8,16,8,16));
         JPanel heading=new JPanel(new BorderLayout()); heading.setOpaque(false);
         turnLabel.setFont(GameTheme.display(20)); heading.add(turnLabel,BorderLayout.CENTER); heading.add(fillLabel,BorderLayout.EAST);
-        JPanel boardHead=new JPanel(new BorderLayout(0,4)); boardHead.setOpaque(false); boardHead.add(heading,BorderLayout.NORTH);
+        JPanel boardHead=new JPanel(new BorderLayout(0,0)); boardHead.setOpaque(false); boardHead.add(heading,BorderLayout.NORTH);
         boardHead.add(label("Phím 1–6 chọn màu  /  Chọn hai ô để đổi vị trí",12,GameTheme.MUTED),BorderLayout.SOUTH); board.add(boardHead,BorderLayout.NORTH);
         JPanel choices=new JPanel(new GridBagLayout()); choices.setOpaque(false);
         JPanel row=new JPanel(new GridLayout(1,6,8,0)); row.setOpaque(false);
@@ -378,12 +382,13 @@ public final class GameClient extends JPanel {
             board.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke((char)('1'+i)),"color-"+i);
             board.getActionMap().put("color-"+i,new AbstractAction() { @Override public void actionPerformed(ActionEvent e) { chooseColor(color); } });
         }
-        colors.setPreferredSize(new Dimension(1,44)); grid.gridy=1; grid.weighty=0; grid.insets=new Insets(8,0,0,0); choices.add(colors,grid);
-        resultLabel.setPreferredSize(new Dimension(1,24)); grid.gridy=2; grid.insets=new Insets(4,0,0,0); choices.add(resultLabel,grid); board.add(choices,BorderLayout.CENTER);
+        colors.setPreferredSize(new Dimension(1,34)); colors.setMinimumSize(new Dimension(1,34)); grid.gridy=1; grid.weighty=0; grid.insets=new Insets(4,0,0,0); choices.add(colors,grid);
+        grid.gridy=2; grid.insets=new Insets(6,0,0,0); choices.add(notesPanel(),grid);
+        resultLabel.setPreferredSize(new Dimension(1,20)); grid.gridy=3; grid.insets=new Insets(4,0,0,0); choices.add(resultLabel,grid); board.add(choices,BorderLayout.CENTER);
         JPanel actions=new JPanel(new BorderLayout(12,0)); actions.setOpaque(false);
-        ((GameTheme.ActionButton)submit).primary().arena(); submit.setFont(GameTheme.display(16)); submit.setPreferredSize(new Dimension(212,48)); actions.add(submit,BorderLayout.EAST);
+        ((GameTheme.ActionButton)submit).primary().arena(); submit.setFont(GameTheme.display(16)); submit.setPreferredSize(new Dimension(212,40)); actions.add(submit,BorderLayout.EAST);
         JPanel edits=new JPanel(new FlowLayout(FlowLayout.LEFT,8,0)); edits.setOpaque(false);
-        ((GameTheme.ActionButton)clear).quiet(); ((GameTheme.ActionButton)remove).quiet(); edits.add(clear); edits.add(remove); actions.add(edits,BorderLayout.CENTER); board.add(actions,BorderLayout.SOUTH);
+        ((GameTheme.ActionButton)clear).quiet(); ((GameTheme.ActionButton)remove).quiet(); clear.setPreferredSize(new Dimension(106,38)); remove.setPreferredSize(new Dimension(130,38)); edits.add(clear); edits.add(remove); actions.add(edits,BorderLayout.CENTER); board.add(actions,BorderLayout.SOUTH);
         arenaCards.setOpaque(false); arenaCards.add(board,"board"); arenaCards.add(resultScreen,"result");
 
         GameTheme.RoundPanel history=new GameTheme.RoundPanel(16); history.setName("guess-history"); history.setLayout(new BorderLayout(0,8)); history.setBorder(new EmptyBorder(6,12,6,12));
@@ -400,6 +405,46 @@ public final class GameClient extends JPanel {
         leave.setBorder(new EmptyBorder(10,16,10,16)); replay.setBorder(new EmptyBorder(10,24,10,24)); back.setBorder(new EmptyBorder(10,20,10,20));
         buttons.setLayout(new BorderLayout(12,0)); buttons.add(leave,BorderLayout.WEST); JPanel postMatch=new JPanel(new FlowLayout(FlowLayout.RIGHT,12,0)); postMatch.setOpaque(false); postMatch.add(back); postMatch.add(replay); buttons.add(postMatch,BorderLayout.EAST); bottom.add(buttons,BorderLayout.CENTER); bottom.add(replayLabel,BorderLayout.SOUTH);
         replay.setEnabled(false); back.setEnabled(false); page.add(bottom,BorderLayout.SOUTH); updateBoard(); return page;
+    }
+
+    private JPanel notesPanel() {
+        JPanel panel=new JPanel(new BorderLayout(0,4)); panel.setOpaque(false); panel.setName("private-notes");
+        JPanel heading=new JPanel(new BorderLayout()); heading.setOpaque(false);
+        JLabel title=label("GHI CHÚ RIÊNG · Chỉ bạn thấy · Bấm ô để chọn màu",11,GameTheme.MUTED);
+        heading.add(title,BorderLayout.CENTER);
+        ((GameTheme.ActionButton)clearNotes).quiet(); clearNotes.setFont(GameTheme.font(11,true));
+        clearNotes.setBorder(new EmptyBorder(1,8,1,8)); clearNotes.setPreferredSize(new Dimension(98,20));
+        clearNotes.setName("clear-notes"); clearNotes.addActionListener(e -> resetNotes()); heading.add(clearNotes,BorderLayout.EAST);
+        panel.add(heading,BorderLayout.NORTH);
+        JPanel row=new JPanel(new GridLayout(1,6,8,0)); row.setOpaque(false);
+        for(int i=0;i<6;i++) {
+            final int position=i; noteSlots[i]=new GameTheme.NoteSlot(i); noteSlots[i].setName("note-slot-"+i);
+            noteSlots[i].addActionListener(e -> showNoteChoices(position)); row.add(noteSlots[i]);
+        }
+        panel.add(row,BorderLayout.CENTER); panel.setPreferredSize(new Dimension(1,64)); panel.setMinimumSize(new Dimension(1,64)); return panel;
+    }
+    private void showNoteChoices(int position) {
+        if(!active) return;
+        String noteRoom=room;
+        noteMenu.removeAll(); noteMenu.setBackground(GameTheme.PANEL); noteMenu.setBorder(new LineBorder(GameTheme.LINE));
+        for(int color=-1;color<6;color++) {
+            final int selected=color;
+            JMenuItem item=new JMenuItem(color<0 ? "Chưa rõ / Bỏ ghi chú" : Rules.COLOR_NAMES[color]);
+            item.setFont(GameTheme.font(13,false)); item.setBackground(GameTheme.PANEL); item.setForeground(GameTheme.TEXT);
+            if(color>=0) item.setIcon(new Icon() {
+                public int getIconWidth() { return 22; } public int getIconHeight() { return 22; }
+                public void paintIcon(Component c,Graphics g,int x,int y) {
+                    Graphics2D p=(Graphics2D)g.create(); GameTheme.orb(p,selected,x+2,y+2,18); p.dispose();
+                }
+            });
+            item.addActionListener(e -> { if(active && room.equals(noteRoom)) { positionNotes[position]=selected; noteSlots[position].state(selected); } });
+            noteMenu.add(item);
+        }
+        if(noteSlots[position].isShowing()) noteMenu.show(noteSlots[position],0,noteSlots[position].getHeight());
+    }
+    private void resetNotes() {
+        noteMenu.setVisible(false); Arrays.fill(positionNotes,-1);
+        for(GameTheme.NoteSlot slot:noteSlots) if(slot!=null) slot.state(-1);
     }
 
     private void authenticate(boolean creating) {
@@ -486,6 +531,7 @@ public final class GameClient extends JPanel {
                 if (invitation.equals(m[1])) clearInvitation(); lobbyStatus.setText(m[2]);
             }
             case "ROOM" -> {
+                resetNotes();
                 setMusicScene(AudioManager.MusicScene.BATTLE);
                 celebration.clear(); audio.stopTransient(); audioTurn=""; warningSecond=6; audioTimeouts.clear();
                 ((CardLayout)arenaCards.getLayout()).show(arenaCards,"board");
@@ -528,6 +574,7 @@ public final class GameClient extends JPanel {
             }
             case "RESULT" -> {
                 if (!room.equals(m[1])) break;
+                noteMenu.setVisible(false);
                 setMusicScene(AudioManager.MusicScene.LOBBY);
                 if(active) {
                     if(m[2].equals(me) && (m[3].equals("LEFT") || m[3].equals("DISCONNECT"))) audio.play(AudioManager.Sound.PEER_LEFT);
@@ -555,6 +602,7 @@ public final class GameClient extends JPanel {
                 if (room.equals(m[1])) { replay.setEnabled(false); replayLabel.setText(m[2]); }
             }
             case "LOBBY" -> {
+                resetNotes();
                 setMusicScene(AudioManager.MusicScene.LOBBY);
                 celebration.clear();
                 room = ""; active = false; current = ""; cards.show(this, "lobby");
@@ -718,6 +766,7 @@ public final class GameClient extends JPanel {
 
     private void updateBoard() {
         boolean enabled = myTurn(), full = true;
+        clearNotes.setEnabled(active); for(GameTheme.NoteSlot note:noteSlots) if(note!=null) note.setEnabled(active);
         if(guessBoard!=null) guessBoard.setEdge(submitted ? GameTheme.GOLD : current.equals(me) ? GameTheme.ACCENT : GameTheme.PINK);
         int filled = 0;
         for (int i = 0; i < 6; i++) {
@@ -750,6 +799,7 @@ public final class GameClient extends JPanel {
     private void send(String command, String... fields) { if (connection != null) connection.send(command, fields); }
 
     private void disconnected(String message) {
+        resetNotes();
         setMusicScene(AudioManager.MusicScene.LOBBY);
         generation++; if (connection != null) connection.close(); connection = null;
         celebration.clear(); audio.stopTransient(); me = ""; active = false; room = ""; clearInvitation(); cards.show(this, registering ? "register" : "login");
@@ -763,7 +813,7 @@ public final class GameClient extends JPanel {
         shutdown(); frame.dispose();
     }
 
-    void shutdown() { generation++; settingsMenu.setVisible(false); settingsFeedback.stop(); uiTimer.stop(); celebration.clear(); audio.close(); GameTheme.unregisterRoot(this); if (connection != null) connection.close(); }
+    void shutdown() { noteMenu.setVisible(false); generation++; settingsMenu.setVisible(false); settingsFeedback.stop(); uiTimer.stop(); celebration.clear(); audio.close(); GameTheme.unregisterRoot(this); if (connection != null) connection.close(); }
 
     private static JPanel base() { JPanel p = new GameTheme.Backdrop(); p.setBorder(new EmptyBorder(12, 16, 12, 16)); return p; }
     private static JPanel vertical() {

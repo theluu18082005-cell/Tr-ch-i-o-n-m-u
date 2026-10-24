@@ -76,6 +76,15 @@ public final class GuiNetworkTest {
             until(() -> ((JPanel) field(bob, "invitationPanel")).isVisible(), "Lời mời sẵn sàng để chấp nhận vào trận");
             edt(() -> { ((JButton) field(bob, "acceptInvite")).doClick(); return null; });
             until(() -> (int) field(alice, "turn") == 1 && (int) field(bob, "turn") == 1, "Hai cửa sổ vào phòng và nhận lượt");
+            edt(() -> {
+                ((JButton[])field(alice,"noteSlots"))[2].doClick(0);
+                ((JMenuItem)((JPopupMenu)field(alice,"noteMenu")).getComponent(6)).doClick(0); return null;
+            });
+            until(() -> ((int[])field(alice,"positionNotes"))[2]==5
+                    && Arrays.stream((int[])field(bob,"positionNotes")).allMatch(n -> n==-1)
+                    && (int)field(alice,"turn")==1 && (int)field(bob,"turn")==1,
+                    "Personal note stays on its own TCP client without changing the turn");
+            if(!new Store(data).matches.get(0).moves.isEmpty()) throw new AssertionError("Note must not submit a guess to server");
             String secret = new Store(data).matches.get(0).secret;
             GameClient starter = edt(() -> field(alice,"current").equals("alice") ? alice : bob);
             GameClient next = starter==alice ? bob : alice;
