@@ -6,6 +6,8 @@ Bản polish có form đăng nhập gọn hơn, thẻ đối thủ arcade, Comba
 
 Khi đối thủ gửi dự đoán, bàn sắp xếp tự điền đúng thứ tự dãy màu vừa gửi để bạn tiếp tục đổi vị trí ở lượt kế tiếp. Cập nhật đồng hồ không ghi đè thao tác đang chỉnh; nếu đối thủ hết giờ và không có dự đoán, bàn giữ dãy hiện tại. Ván mới bắt đầu với bàn trống.
 
+Hàng **Ghi chú riêng** gồm 6 vị trí: bấm ô để chọn màu bạn nghi là đúng hoặc **Chưa rõ**, dùng cả khi chờ đối thủ. Ghi chú không gửi lên server, không đổi dãy dự đoán hay điểm số; giữ qua các lượt và xóa khi sang ván mới. **Xóa ghi chú** chỉ xóa hàng ghi chú.
+
 Mở lại `run-client.bat` để dùng bản đã cập nhật. Chi tiết thiết kế, kiểm thử và ảnh trước/sau: [docs/DESIGN.md](docs/DESIGN.md#neon-arcade-arena--bản-redesign-08102026).
 
 Game đoán dãy màu đối kháng online cho bài tập lớn Lập trình mạng. Java 17, TCP Socket, giao diện Swing. Server dùng MySQL khi có `data/mysql.properties`; xem [hướng dẫn MySQL](docs/MYSQL.md). Nếu không có file cấu hình này, server dùng dữ liệu file như bản trước.
