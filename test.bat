@@ -29,6 +29,8 @@ java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\tes
 if errorlevel 1 goto end
 java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.InvitationOverlayTest
 if errorlevel 1 goto end
+java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.RematchPromptTest
+if errorlevel 1 goto end
 java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.SettingsTest
 if errorlevel 1 goto end
 java -Dfile.encoding=UTF-8 -Djava.awt.headless=true -cp "build\classes;build\test-classes" vn.ptit.colorgame.UiSmokeTest

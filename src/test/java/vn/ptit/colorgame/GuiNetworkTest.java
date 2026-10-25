@@ -135,11 +135,35 @@ public final class GuiNetworkTest {
             until(() -> ((DefaultTableModel) field(alice, "movesModel")).getRowCount() == 3
                     && ((DefaultTableModel) field(bob, "movesModel")).getValueAt(2, 3).equals("6/6"), "Lịch sử hiển thị dự đoán chính xác 6/6");
             until(() -> ((JPanel)field(alice,"resultScreen")).isVisible() && ((JPanel)field(bob,"resultScreen")).isVisible(),"Victory and Defeat screens shown from real server results");
-            edt(() -> { ((JButton) field(alice, "replay")).doClick(); ((JButton) field(bob, "replay")).doClick(); return null; });
+            edt(() -> { ((JButton)field(alice,"replay")).doClick(0); return null; });
+            until(() -> ((InvitationOverlay)field(alice,"invitationOverlay")).shows((JPanel)field(alice,"rematchPanel"))
+                    && ((InvitationOverlay)field(bob,"invitationOverlay")).shows((JPanel)field(bob,"rematchPanel"))
+                    && !((JButton)field(alice,"acceptRematch")).isEnabled() && ((JButton)field(bob,"acceptRematch")).isEnabled(),
+                    "Sender waits and opponent receives actionable centered rematch invitation");
+            edt(() -> { ((JButton)field(bob,"acceptRematch")).doClick(0); return null; });
             until(() -> (boolean) field(alice, "active") && (boolean) field(bob, "active")
                     && ((DefaultTableModel) field(alice, "movesModel")).getRowCount() == 0, "Nút Chơi lại tạo trận mới và xóa bảng lượt cũ");
             until(() -> ((DefaultTableModel) field(carol, "onlineModel")).getRowCount() == 3, "Client thứ ba vẫn kết nối tại sảnh");
             until(() -> !((JPanel)field(alice,"resultScreen")).isVisible() && !((JPanel)field(bob,"resultScreen")).isVisible(),"Rematch restores orb deck instead of stale results");
+            until(() -> !((InvitationOverlay)field(alice,"invitationOverlay")).isVisible() && !((InvitationOverlay)field(bob,"invitationOverlay")).isVisible()
+                    && !((InvitationOverlay)field(alice,"invitationOverlay")).guardsInstalled() && !((InvitationOverlay)field(bob,"invitationOverlay")).guardsInstalled()
+                    && (int)field(alice,"turn")==1 && (int)field(bob,"turn")==1,"New game releases both rematch modals and receives first turn");
+            String secondSecret=new Store(data).matches.stream().filter(Store.Match::active).findFirst().orElseThrow().secret;
+            edt(() -> {
+                GameClient player=field(alice,"current").equals("alice") ? alice : bob;
+                for(char color:secondSecret.toCharArray()) player.chooseColor(color-'0'); ((JButton)field(player,"submit")).doClick(0); return null;
+            });
+            until(() -> !(boolean)field(alice,"active") && !(boolean)field(bob,"active"),"Second completed game ready for rematch refusal");
+            edt(() -> { ((JButton)field(bob,"replay")).doClick(0); return null; });
+            until(() -> ((JButton)field(alice,"acceptRematch")).isEnabled() && ((InvitationOverlay)field(alice,"invitationOverlay")).shows((JPanel)field(alice,"rematchPanel")),"Other player can also initiate rematch");
+            edt(() -> { ((JButton)field(alice,"returnRematch")).doClick(0); return null; });
+            until(() -> field(alice,"room").equals("") && !((InvitationOverlay)field(alice,"invitationOverlay")).isVisible()
+                    && ((InvitationOverlay)field(bob,"invitationOverlay")).shows((JPanel)field(bob,"rematchPanel"))
+                    && !((JButton)field(bob,"acceptRematch")).isVisible() && ((JButton)field(bob,"returnRematch")).isEnabled(),"Refusal returns player to lobby and tells requester opponent left");
+            edt(() -> { ((JButton)field(bob,"returnRematch")).doClick(0); return null; });
+            until(() -> field(bob,"room").equals("") && !((InvitationOverlay)field(bob,"invitationOverlay")).guardsInstalled(),"Requester can exit unavailable rematch prompt");
+            Store saved=new Store(data);
+            if(saved.matches.size()!=2 || saved.accounts.get("alice").points+saved.accounts.get("bob").points!=2) throw new AssertionError("Refusing rematch must not create or score an extra match");
         } finally {
             GameClient ca = a, cb = b, cc = c;
             edt(() -> { if (ca != null) ca.shutdown(); if (cb != null) cb.shutdown(); if (cc != null) cc.shutdown(); return null; });

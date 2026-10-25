@@ -13,6 +13,7 @@ java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.color
 java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.ClientNotesTest
 java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.GameGuideTest
 java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.InvitationOverlayTest
+java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.RematchPromptTest
 java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.SettingsTest
 java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.UiSmokeTest
 java -Djava.awt.headless=true -cp build/classes:build/test-classes vn.ptit.colorgame.GuiNetworkTest

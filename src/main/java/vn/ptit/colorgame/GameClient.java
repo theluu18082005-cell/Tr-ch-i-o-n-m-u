@@ -54,6 +54,13 @@ public final class GameClient extends JPanel {
     private final JLabel invitationHint=label("Chọn phản hồi trước khi thời gian kết thúc",11,GameTheme.MUTED);
     private final JProgressBar invitationProgress = new JProgressBar(0, 1000);
     private final JPanel invitationActions = new JPanel(new CardLayout());
+    private enum RematchPrompt { NONE, INCOMING, WAITING, UNAVAILABLE, LEAVING }
+    private RematchPrompt rematchPrompt=RematchPrompt.NONE;
+    private final GameTheme.RoundPanel rematchPanel=new GameTheme.RoundPanel(20);
+    private final JLabel rematchTitle=label("Chơi thêm một ván?",20,GameTheme.TEXT), rematchPeer=label("",24,GameTheme.TEXT), rematchAvatar=new JLabel();
+    private final JLabel rematchDetail=new GameTheme.Notice(" "), rematchHint=label("Trận mới bắt đầu khi cả hai đồng ý",11,GameTheme.MUTED);
+    private final JButton acceptRematch=button("Đồng ý chơi tiếp"), returnRematch=button("Trở về sảnh");
+    private final JPanel rematchActions=new JPanel(new GridLayout(1,0,12,0));
     private final LobbyStyle.OpponentCard opponentCard = new LobbyStyle.OpponentCard(inviteButton);
     private final JTextField opponentSearch = new JTextField();
     private final JLabel availableCount = label("Đang chờ người chơi kết nối", 12, GameTheme.MUTED);
@@ -122,8 +129,10 @@ public final class GameClient extends JPanel {
         clear.addActionListener(e -> { Arrays.fill(arrangement, -1); selectedSlot = -1; updateBoard(); });
         remove.addActionListener(e -> { if (selectedSlot >= 0) arrangement[selectedSlot] = -1; selectedSlot = -1; updateBoard(); });
         leave.addActionListener(e -> leaveRoom());
-        replay.addActionListener(e -> { send("REMATCH", room); replayRequested = true; replay.setEnabled(false); replayLabel.setText("Đang chờ đối thủ đồng ý chơi lại…"); });
-        back.addActionListener(e -> send("BACK", room));
+        replay.addActionListener(e -> requestRematch());
+        back.addActionListener(e -> returnAfterMatch());
+        acceptRematch.addActionListener(e -> requestRematch()); returnRematch.addActionListener(e -> returnAfterMatch());
+        wireClickSounds(rematchPanel);
         tabs.addChangeListener(e -> refreshTab());
         wireClickSounds(this);
         addHierarchyListener(e -> { if((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED)!=0) audio.setSuspended(!isShowing()); });
@@ -458,7 +467,56 @@ public final class GameClient extends JPanel {
         back.setText("Trở về sảnh");
         leave.setBorder(new EmptyBorder(10,16,10,16)); replay.setBorder(new EmptyBorder(10,24,10,24)); back.setBorder(new EmptyBorder(10,20,10,20));
         buttons.setLayout(new BorderLayout(12,0)); buttons.add(leave,BorderLayout.WEST); JPanel postMatch=new JPanel(new FlowLayout(FlowLayout.RIGHT,12,0)); postMatch.setOpaque(false); postMatch.add(back); postMatch.add(replay); buttons.add(postMatch,BorderLayout.EAST); bottom.add(buttons,BorderLayout.CENTER); bottom.add(replayLabel,BorderLayout.SOUTH);
-        replay.setEnabled(false); back.setEnabled(false); page.add(bottom,BorderLayout.SOUTH); updateBoard(); return page;
+        replay.setEnabled(false); back.setEnabled(false); page.add(bottom,BorderLayout.SOUTH); buildRematchCard(); updateBoard(); return page;
+    }
+
+    private void buildRematchCard() {
+        rematchPanel.setName("rematch-prompt"); rematchPanel.getAccessibleContext().setAccessibleName("Hộp thoại mời chơi lại");
+        rematchPanel.setLayout(new BorderLayout(0,18)); rematchPanel.setBorder(new EmptyBorder(22,24,22,24)); rematchPanel.setPreferredSize(new Dimension(540,300));
+        JPanel header=new JPanel(new BorderLayout(12,0)); header.setOpaque(false); rematchTitle.setFont(GameTheme.display(20)); header.add(rematchTitle,BorderLayout.CENTER); header.add(new GameTheme.Badge("VÁN MỚI",GameTheme.ACCENT),BorderLayout.EAST); rematchPanel.add(header,BorderLayout.NORTH);
+        JPanel peer=new JPanel(new BorderLayout(16,0)); peer.setOpaque(false); rematchAvatar.setPreferredSize(new Dimension(64,64)); peer.add(rematchAvatar,BorderLayout.WEST);
+        JPanel identity=new JPanel(new BorderLayout(0,8)); identity.setOpaque(false); rematchPeer.setFont(GameTheme.display(24)); identity.add(rematchPeer,BorderLayout.NORTH);
+        rematchDetail.setFont(GameTheme.font(13,false)); rematchDetail.setPreferredSize(new Dimension(1,60)); identity.add(rematchDetail,BorderLayout.CENTER); peer.add(identity,BorderLayout.CENTER); rematchPanel.add(peer,BorderLayout.CENTER);
+        ((GameTheme.ActionButton)acceptRematch).primary().arena(); ((GameTheme.ActionButton)returnRematch).secondary();
+        acceptRematch.setName("rematch-accept"); returnRematch.setName("rematch-return"); rematchActions.setOpaque(false); rematchActions.setPreferredSize(new Dimension(1,48));
+        JPanel footer=new JPanel(new BorderLayout(0,12)); footer.setOpaque(false); footer.add(rematchActions,BorderLayout.NORTH); footer.add(rematchHint,BorderLayout.SOUTH); rematchPanel.add(footer,BorderLayout.SOUTH);
+        rematchPanel.setVisible(false); acceptRematch.setEnabled(false); returnRematch.setEnabled(false);
+    }
+    private void showRematchPrompt(RematchPrompt state,String detail) {
+        if(room.isEmpty() || active) return;
+        rematchPrompt=state; closeGuide(); settingsMenu.setVisible(false); noteMenu.setVisible(false); MenuSelectionManager.defaultManager().clearSelectedPath();
+        String peer=me.equals(first) ? second : first;
+        rematchPeer.setText(name(peer)); rematchPeer.setToolTipText(name(peer)); rematchAvatar.setIcon(new GameTheme.Avatar(peer,64));
+        rematchTitle.setText(switch(state) {
+            case INCOMING -> "Đối thủ mời chơi lại";
+            case WAITING -> "Đã gửi lời mời chơi lại";
+            case UNAVAILABLE -> "Không thể chơi lại";
+            case LEAVING -> "Đang trở về sảnh…";
+            default -> "Chơi thêm một ván?";
+        });
+        rematchPanel.setEdge(state==RematchPrompt.UNAVAILABLE ? GameTheme.RED : state==RematchPrompt.WAITING ? GameTheme.BLUE : GameTheme.ACCENT);
+        rematchDetail.setText(detail);
+        rematchHint.setText(state==RematchPrompt.INCOMING ? "Trận mới bắt đầu khi cả hai đồng ý" : state==RematchPrompt.WAITING ? "Có thể trở về sảnh nếu không muốn chờ nữa" : state==RematchPrompt.LEAVING ? "Đang chờ server xác nhận…" : "Trở về sảnh để tìm một đối thủ khác");
+        boolean choice=state==RematchPrompt.INCOMING || state==RematchPrompt.WAITING;
+        if(rematchActions.getComponentCount()!=(choice ? 2 : 1)) { rematchActions.removeAll(); if(choice) rematchActions.add(acceptRematch); rematchActions.add(returnRematch); }
+        acceptRematch.setVisible(choice); acceptRematch.setText(state==RematchPrompt.WAITING ? "Đã gửi lời mời" : "Đồng ý chơi tiếp");
+        acceptRematch.setEnabled(state==RematchPrompt.INCOMING && !replayRequested); returnRematch.setEnabled(state!=RematchPrompt.LEAVING);
+        invitationOverlay.showCard(rematchPanel); rematchPanel.pulse();
+    }
+    private void requestRematch() {
+        if(room.isEmpty() || active || replayRequested || rematchPrompt==RematchPrompt.LEAVING || rematchPrompt==RematchPrompt.UNAVAILABLE || !replay.isEnabled()) return;
+        replayRequested=true; replay.setEnabled(false); replayLabel.setText("Đang chờ đối thủ đồng ý chơi lại…");
+        showRematchPrompt(RematchPrompt.WAITING,"Đang chờ đối thủ đồng ý. Trận mới sẽ bắt đầu khi cả hai sẵn sàng."); send("REMATCH",room);
+    }
+    private void returnAfterMatch() {
+        if(room.isEmpty() || active || rematchPrompt==RematchPrompt.LEAVING) return;
+        boolean modal=invitationOverlay.shows(rematchPanel); rematchPrompt=RematchPrompt.LEAVING; replay.setEnabled(false); back.setEnabled(false);
+        if(modal) showRematchPrompt(RematchPrompt.LEAVING,"Đang rời phòng và trở về sảnh…");
+        send("BACK",room);
+    }
+    private void resetRematchPrompt() {
+        if(invitationOverlay.shows(rematchPanel)) invitationOverlay.close();
+        rematchPanel.setVisible(false); rematchPrompt=RematchPrompt.NONE; replayRequested=false; acceptRematch.setEnabled(false); returnRematch.setEnabled(false);
     }
 
     private JPanel notesPanel() {
@@ -534,6 +592,7 @@ public final class GameClient extends JPanel {
         switch (m[0]) {
             case "HELLO", "PONG" -> { }
             case "AUTH" -> {
+                resetRematchPrompt();
                 setMusicScene(AudioManager.MusicScene.LOBBY);
                 me = m[1]; myName = m[2]; profiles.clear(); profiles.put(me, Arrays.copyOfRange(m, 1, m.length));
                 onlineRows.clear(); onlineModel.setRowCount(0); opponentSearch.setText(""); clearInvitation();
@@ -585,6 +644,7 @@ public final class GameClient extends JPanel {
                 if (invitation.equals(m[1])) clearInvitation(); lobbyStatus.setText(m[2]);
             }
             case "ROOM" -> {
+                resetRematchPrompt();
                 closeGuide();
                 resetNotes();
                 setMusicScene(AudioManager.MusicScene.BATTLE);
@@ -629,6 +689,7 @@ public final class GameClient extends JPanel {
             }
             case "RESULT" -> {
                 if (!room.equals(m[1])) break;
+                if(active) resetRematchPrompt();
                 noteMenu.setVisible(false);
                 setMusicScene(AudioManager.MusicScene.LOBBY);
                 if(active) {
@@ -642,21 +703,36 @@ public final class GameClient extends JPanel {
                 resultLabel.setText(m[3].equals("SOLVED") ? name(m[2]) + " đã đoán đúng cả 6 vị trí."
                         : "Trận kết thúc: " + (m[3].equals("LEFT") ? "một người chơi đã rời phòng." : "một người chơi mất kết nối."));
                 timerLabel.setText("XONG"); timerLabel.setFont(GameTheme.font(15, true)); clock.setValue(0);
-                replay.setEnabled(true); back.setEnabled(true); leave.setEnabled(false);
+                replay.setEnabled(!replayRequested && rematchPrompt!=RematchPrompt.UNAVAILABLE && rematchPrompt!=RematchPrompt.LEAVING); back.setEnabled(rematchPrompt!=RematchPrompt.LEAVING); leave.setEnabled(false);
                 String winningSequence=m[3].equals("SOLVED") && movesModel.getRowCount()>0 ? movesModel.getValueAt(movesModel.getRowCount()-1,2).toString() : "";
                 resultScreen.showResult(m[2].equals(me),m[3].equals("SOLVED") ? m[2].equals(me) ? "Đã tìm được dãy màu bí mật." : "Đối thủ đã giải mã dãy màu." : resultLabel.getText(),movesModel.getRowCount(),winningSequence);
                 ((CardLayout)arenaCards.getLayout()).show(arenaCards,"result");
                 updateBoard(); updatePlayers(); send("RANK"); send("HISTORY");
             }
             case "REMATCH_STATUS" -> {
-                if (!room.equals(m[1])) break;
-                if (m[2].equals(me)) { replayRequested = true; replay.setEnabled(false); replayLabel.setText("Đang chờ đối thủ đồng ý chơi lại…"); }
-                else replayLabel.setText("Đối thủ muốn chơi lại. Bấm Chơi lại để đồng ý.");
+                if (room.isEmpty() || !room.equals(m[1]) || active || rematchPrompt==RematchPrompt.LEAVING || rematchPrompt==RematchPrompt.UNAVAILABLE) break;
+                String peer=me.equals(first) ? second : first;
+                if(!m[2].equals(me) && !m[2].equals(peer)) break;
+                if (m[2].equals(me)) {
+                    replayRequested=true; replay.setEnabled(false); replayLabel.setText("Đang chờ đối thủ đồng ý chơi lại…");
+                    showRematchPrompt(RematchPrompt.WAITING,"Đang chờ đối thủ đồng ý. Bạn có thể trở về sảnh nếu không muốn chờ nữa.");
+                } else if(replayRequested) {
+                    showRematchPrompt(RematchPrompt.WAITING,"Cả hai đã đồng ý. Đang chờ server tạo ván mới…");
+                } else {
+                    if(rematchPrompt!=RematchPrompt.INCOMING) audio.play(AudioManager.Sound.INVITE);
+                    replayLabel.setText("Đối thủ muốn chơi lại. Chọn phản hồi trong hộp lời mời.");
+                    showRematchPrompt(RematchPrompt.INCOMING,"Đối thủ muốn đấu thêm một ván. Bạn có muốn chơi tiếp không?");
+                }
             }
             case "REMATCH_UNAVAILABLE" -> {
-                if (room.equals(m[1])) { replay.setEnabled(false); replayLabel.setText(m[2]); }
+                if (room.equals(m[1]) && !active) {
+                    boolean open=rematchPrompt!=RematchPrompt.NONE && rematchPrompt!=RematchPrompt.LEAVING;
+                    replay.setEnabled(false); replayLabel.setText(m[2]);
+                    if(rematchPrompt!=RematchPrompt.LEAVING) { rematchPrompt=RematchPrompt.UNAVAILABLE; if(open) showRematchPrompt(RematchPrompt.UNAVAILABLE,m[2]); }
+                }
             }
             case "LOBBY" -> {
+                resetRematchPrompt();
                 clearInvitation();
                 resetNotes();
                 setMusicScene(AudioManager.MusicScene.LOBBY);
@@ -669,7 +745,13 @@ public final class GameClient extends JPanel {
                 if (m[1].equals("LOGIN") || m[1].equals("REGISTER")) {
                     (m[1].equals("REGISTER") ? registerStatus : loginStatus).setText(m[2]); setAuthenticationEnabled(true);
                 } else if (m[1].equals("GUESS")) { submitted = false; resultLabel.setText(m[2]); updateBoard(); }
-                else if (m[1].equals("REMATCH")) { replayLabel.setText(m[2]); }
+                else if (m[1].equals("REMATCH")) {
+                    if(!active && !room.isEmpty() && replayRequested && rematchPrompt!=RematchPrompt.LEAVING) {
+                        replayRequested=false; replay.setEnabled(false); replayLabel.setText(m[2]); showRematchPrompt(RematchPrompt.UNAVAILABLE,m[2]);
+                    }
+                } else if(m[1].equals("BACK") && !active && rematchPrompt==RematchPrompt.LEAVING) {
+                    showRematchPrompt(RematchPrompt.UNAVAILABLE,m[2]);
+                }
                 else {
                     if (m[1].equals("CHALLENGE")) { challengePending = false; updateSelectedOpponent(); }
                     if (m[1].equals("RESPOND") || m[1].equals("CANCEL_INVITE")) { clearInvitation(); send("LIST"); }
@@ -741,6 +823,7 @@ public final class GameClient extends JPanel {
     }
 
     private void showInvitation(String id, String peer, String seconds, boolean outgoing) {
+        resetRematchPrompt();
         boolean responding=invitation.equals(id) && invitationResponding;
         if(!outgoing && !invitation.equals(id)) audio.play(AudioManager.Sound.INVITE);
         closeGuide(); settingsMenu.setVisible(false); MenuSelectionManager.defaultManager().clearSelectedPath();
@@ -757,7 +840,7 @@ public final class GameClient extends JPanel {
         invitationPanel.setEdge(outgoing ? GameTheme.BLUE : GameTheme.ACCENT);
         ((CardLayout) invitationActions.getLayout()).show(invitationActions, outgoing ? "outgoing" : "incoming");
         acceptInvite.setEnabled(!outgoing && !responding); rejectInvite.setEnabled(!outgoing && !responding); cancelInvite.setEnabled(outgoing && !responding);
-        invitationPanel.setVisible(true); invitationOverlay.open(); invitationPanel.pulse(); updateInvitationClock(); updateSelectedOpponent();
+        invitationPanel.setVisible(true); invitationOverlay.showCard(invitationPanel); invitationPanel.pulse(); updateInvitationClock(); updateSelectedOpponent();
     }
 
     private static void closeBackgroundPopups(Container parent) {
@@ -959,6 +1042,7 @@ public final class GameClient extends JPanel {
     private void send(String command, String... fields) { if (connection != null) connection.send(command, fields); }
 
     private void disconnected(String message) {
+        resetRematchPrompt();
         closeGuide();
         resetNotes();
         setMusicScene(AudioManager.MusicScene.LOBBY);
@@ -974,7 +1058,7 @@ public final class GameClient extends JPanel {
         shutdown(); frame.dispose();
     }
 
-    void shutdown() { invitationOverlay.close(); closeGuide(); noteMenu.setVisible(false); generation++; settingsMenu.setVisible(false); settingsFeedback.stop(); uiTimer.stop(); celebration.clear(); audio.close(); GameTheme.unregisterRoot(this); if (connection != null) connection.close(); }
+    void shutdown() { resetRematchPrompt(); invitationOverlay.close(); closeGuide(); noteMenu.setVisible(false); generation++; settingsMenu.setVisible(false); settingsFeedback.stop(); uiTimer.stop(); celebration.clear(); audio.close(); GameTheme.unregisterRoot(this); if (connection != null) connection.close(); }
 
     private static JPanel base() { JPanel p = new GameTheme.Backdrop(); p.setBorder(new EmptyBorder(12, 16, 12, 16)); return p; }
     private static JPanel vertical() {

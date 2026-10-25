@@ -9,13 +9,18 @@ import java.util.Arrays;
 
 /** In-window modal: cached blurred backdrop, pointer shield and per-client focus trap. */
 final class InvitationOverlay extends JPanel {
-    private final JComponent background,card;
+    private final JComponent background;
+    private JComponent card;
     private BufferedImage snapshot;
     private int snapshotWidth,snapshotHeight;
     private Component previousFocus;
     private boolean guardsInstalled;
     private final KeyEventDispatcher keys;
     private final VetoableChangeListener focus;
+    private Window focusWindow;
+    private final WindowAdapter wakeFocus=new WindowAdapter() {
+        @Override public void windowGainedFocus(WindowEvent e) { focusModal(); }
+    };
 
     InvitationOverlay(JComponent background,JComponent card) {
         this.background=background; this.card=card;
@@ -45,6 +50,19 @@ final class InvitationOverlay extends JPanel {
         Container client=background.getParent();
         return client!=null && SwingUtilities.isDescendingFrom(target,client) && !SwingUtilities.isDescendingFrom(target,this);
     }
+    void showCard(JComponent next) {
+        if(card!=next) { card.setVisible(false); remove(card); card=next; add(card); }
+        card.setVisible(true);
+        String name=card.getAccessibleContext().getAccessibleName();
+        getAccessibleContext().setAccessibleName(name==null ? "Hộp thoại lời mời thi đấu" : name);
+        open(); revalidate(); repaint(); SwingUtilities.invokeLater(this::focusModal);
+    }
+    boolean shows(JComponent candidate) { return isVisible() && card==candidate; }
+    private void focusModal() {
+        if(!isShowing()) return;
+        Component current=KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
+        if(current==null || !SwingUtilities.isDescendingFrom(current,this)) requestFocusInWindow();
+    }
     void open() {
         if(isVisible()) return;
         Component current=KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusOwner();
@@ -52,7 +70,8 @@ final class InvitationOverlay extends JPanel {
         snapshot=null; snapshotWidth=0; snapshotHeight=0; card.setVisible(true); setVisible(true);
         KeyboardFocusManager manager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
         manager.addKeyEventDispatcher(keys); manager.addVetoableChangeListener("focusOwner",focus); guardsInstalled=true;
-        revalidate(); repaint(); requestFocusInWindow();
+        focusWindow=SwingUtilities.getWindowAncestor(this); if(focusWindow!=null) focusWindow.addWindowFocusListener(wakeFocus);
+        revalidate(); repaint(); focusModal(); SwingUtilities.invokeLater(this::focusModal);
     }
     void close() {
         setVisible(false); card.setVisible(false); snapshot=null;
@@ -60,6 +79,7 @@ final class InvitationOverlay extends JPanel {
             KeyboardFocusManager manager=KeyboardFocusManager.getCurrentKeyboardFocusManager();
             manager.removeKeyEventDispatcher(keys); manager.removeVetoableChangeListener("focusOwner",focus); guardsInstalled=false;
         }
+        if(focusWindow!=null) { focusWindow.removeWindowFocusListener(wakeFocus); focusWindow=null; }
         Component restore=previousFocus; previousFocus=null;
         if(restore!=null) SwingUtilities.invokeLater(() -> { if(!isVisible() && restore.isShowing() && restore.isEnabled()) restore.requestFocusInWindow(); });
     }

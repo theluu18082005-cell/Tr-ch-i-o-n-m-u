@@ -18,6 +18,8 @@ Lời mời gửi/nhận hiển thị giữa cửa sổ với nền làm mờ v�
 
 Trong **Combat Log**, bấm lượt có đủ 6 màu hoặc chọn dòng rồi nhấn **Enter** để nạp lại dãy đoán của bạn/đối thủ. Chỉ dùng trong lượt của bạn khi còn thời gian và chưa gửi. Có thể sửa tiếp, kéo thả rồi **Gửi dự đoán**; thao tác nạp lại không tự gửi và giữ nguyên ghi chú riêng. Lượt hết giờ không được nạp lại.
 
+Sau trận, bấm **Chơi lại** để gửi lời mời mới: bên gửi thấy hộp chờ, bên nhận có **Đồng ý chơi tiếp / Trở về sảnh**. Hộp ở giữa, nền mờ và khóa thao tác; dùng chung lớp phủ với lời mời thi đấu. Hai bên đồng ý thì server tạo ván mới; trở về sảnh hoặc đối thủ rời phòng sẽ kết thúc chờ.
+
 Mở lại `run-client.bat` để dùng bản đã cập nhật. Chi tiết thiết kế, kiểm thử và ảnh trước/sau: [docs/DESIGN.md](docs/DESIGN.md#neon-arcade-arena--bản-redesign-08102026).
 
 Game đoán dãy màu đối kháng online cho bài tập lớn Lập trình mạng. Java 17, TCP Socket, giao diện Swing. Server dùng MySQL khi có `data/mysql.properties`; xem [hướng dẫn MySQL](docs/MYSQL.md). Nếu không có file cấu hình này, server dùng dữ liệu file như bản trước.
