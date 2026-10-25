@@ -362,7 +362,7 @@ public final class GameTheme {
     public static final class ColorSlot extends JButton {
         private final int position;
         private int color=-1;
-        private boolean selected;
+        private boolean selected,dropHighlighted;
         private long changedAt;
         public ColorSlot(int position) {
             this.position=position; setOpaque(false); setContentAreaFilled(false); setBorderPainted(false); setFocusPainted(false);
@@ -376,11 +376,12 @@ public final class GameTheme {
             String description="Vị trí "+(position+1)+": "+(color<0 ? "Chưa chọn" : Rules.COLOR_NAMES[color]);
             getAccessibleContext().setAccessibleName(description); setToolTipText(description); repaint();
         }
+        public void highlightDrop(boolean value) { if(dropHighlighted!=value) { dropHighlighted=value; repaint(); } }
         @Override protected void paintComponent(Graphics g) {
             Graphics2D p=graphics(g); int w=getWidth(),h=getHeight();
-            p.setColor(selected ? SELECTED : INPUT); p.fillRoundRect(1,1,w-2,h-2,10,10);
-            p.setColor(selected || hasFocus() || (isEnabled() && getModel().isRollover()) ? ACCENT : LINE);
-            p.setStroke(new BasicStroke(selected || hasFocus() ? 2 : 1)); p.drawRoundRect(1,1,w-3,h-3,10,10);
+            p.setColor(selected || dropHighlighted ? SELECTED : INPUT); p.fillRoundRect(1,1,w-2,h-2,10,10);
+            p.setColor(selected || dropHighlighted || hasFocus() || (isEnabled() && getModel().isRollover()) ? ACCENT : LINE);
+            p.setStroke(new BasicStroke(selected || dropHighlighted || hasFocus() ? 2 : 1)); p.drawRoundRect(1,1,w-3,h-3,10,10);
             p.setFont(font(10,true)); p.setColor(MUTED); p.drawString("0"+(position+1),10,18);
             double age=(System.nanoTime()-changedAt)/1e9;
             int size=Math.min(96,Math.min(w-24,Math.max(36,h-48)));
@@ -389,7 +390,7 @@ public final class GameTheme {
                 float r=(float)(20+age*42); p.setColor(alpha(COLORS[color],(int)(190*(1-age/.45))));
                 p.setStroke(new BasicStroke(2)); p.draw(new Ellipse2D.Float(w/2f-r,h/2f-r-1,r*2,r*2));
             }
-            if(selected) glow(p,ACCENT,w/2f,h/2f,Math.min(w,h)*.6f,45);
+            if(selected || dropHighlighted) glow(p,ACCENT,w/2f,h/2f,Math.min(w,h)*.6f,45);
             if (color>=0) orb(p,color,(w-size)/2f,(h-size)/2f-1,size);
             else { p.setColor(LINE); p.setStroke(new BasicStroke(1.5f)); p.drawOval((w-size)/2,(h-size)/2-1,size,size); }
             String caption=color<0 ? "Chọn màu" : Rules.COLOR_NAMES[color]; p.setFont(font(12,color>=0)); p.setColor(color<0 ? MUTED : TEXT);
@@ -454,11 +455,12 @@ public final class GameTheme {
         }
     }
     public static final class Logo implements Icon {
-        public int getIconWidth() { return 36; }
-        public int getIconHeight() { return 36; }
-        public void paintIcon(Component c,Graphics g,int x,int y) {
-            Graphics2D p=graphics(g); for(int i=0;i<6;i++) { double a=i*Math.PI/3; orb(p,i,x+13+(float)Math.cos(a)*10,y+13+(float)Math.sin(a)*10,9); } p.dispose();
-        }
+        private final GameLogo artwork;
+        public Logo() { this(32); }
+        public Logo(int size) { artwork=new GameLogo(size); }
+        public int getIconWidth() { return artwork.getIconWidth(); }
+        public int getIconHeight() { return artwork.getIconHeight(); }
+        public void paintIcon(Component c,Graphics g,int x,int y) { artwork.paintIcon(c,g,x,y); }
     }
     public static final class Badge extends JLabel {
         private Color color;

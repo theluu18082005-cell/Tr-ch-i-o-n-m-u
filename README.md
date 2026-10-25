@@ -8,6 +8,16 @@ Khi đối thủ gửi dự đoán, bàn sắp xếp tự điền đúng thứ t
 
 Hàng **Ghi chú riêng** gồm 6 vị trí: bấm ô để chọn màu bạn nghi là đúng hoặc **Chưa rõ**, dùng cả khi chờ đối thủ. Ghi chú không gửi lên server, không đổi dãy dự đoán hay điểm số; giữ qua các lượt và xóa khi sang ván mới. **Xóa ghi chú** chỉ xóa hàng ghi chú.
 
+Ở sảnh, bấm **Hướng dẫn chơi** cạnh **Cài đặt** để mở cẩm nang luật chơi, thao tác, kết quả và ghi chú riêng. Có thể cuộn nội dung, đóng bằng **Đã hiểu · Đóng** hoặc **Esc**; bảng tự đóng khi vào trận.
+
+Bạn có thể **kéo màu từ thanh màu vào bất kỳ vị trí nào**, kéo quả cầu giữa các ô để đổi chỗ/chuyển ô, hoặc kéo màu mới đè lên ô để thay màu. Thao tác bấm và phím 1–6 vẫn dùng được. Kéo ra ngoài bàn không thay đổi dự đoán; chỉ thao tác được khi đến lượt và chưa gửi.
+
+Logo ColorDuel dùng sáu ô màu trong huy hiệu đấu trường cyan–hồng, đồng bộ ở thanh thương hiệu và biểu tượng cửa sổ. Hình được vẽ bằng Java2D, cache theo kích thước để nét ở màn hình DPI cao.
+
+Lời mời gửi/nhận hiển thị giữa cửa sổ với nền làm mờ và tối. Khi hộp lời mời đang mở, chuột/bàn phím chỉ thao tác trong hộp: người nhận **Chấp nhận / Từ chối**, người gửi **Hủy lời mời**. Countdown vẫn chạy và hộp tự đóng khi server xác nhận kết quả, hết hạn hoặc ngắt kết nối.
+
+Trong **Combat Log**, bấm lượt có đủ 6 màu hoặc chọn dòng rồi nhấn **Enter** để nạp lại dãy đoán của bạn/đối thủ. Chỉ dùng trong lượt của bạn khi còn thời gian và chưa gửi. Có thể sửa tiếp, kéo thả rồi **Gửi dự đoán**; thao tác nạp lại không tự gửi và giữ nguyên ghi chú riêng. Lượt hết giờ không được nạp lại.
+
 Mở lại `run-client.bat` để dùng bản đã cập nhật. Chi tiết thiết kế, kiểm thử và ảnh trước/sau: [docs/DESIGN.md](docs/DESIGN.md#neon-arcade-arena--bản-redesign-08102026).
 
 Game đoán dãy màu đối kháng online cho bài tập lớn Lập trình mạng. Java 17, TCP Socket, giao diện Swing. Server dùng MySQL khi có `data/mysql.properties`; xem [hướng dẫn MySQL](docs/MYSQL.md). Nếu không có file cấu hình này, server dùng dữ liệu file như bản trước.

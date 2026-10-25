@@ -41,12 +41,13 @@ public final class UiSmokeTest {
     private static void screenshot(GameClient client, Path path, int width, int height) throws Exception {
         client.setSize(width, height); layout(client); layout(client);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        Graphics2D graphics = image.createGraphics(); client.printAll(graphics); graphics.dispose();
+        // Capture live selection; JTable.printAll deliberately suppresses selected-row styling.
+        Graphics2D graphics = image.createGraphics(); client.paint(graphics); graphics.dispose();
         ImageIO.write(image, "png", path.toFile()); criticalBounds(client);
     }
 
     private static void criticalBounds(GameClient client) throws Exception {
-        String[] controls={"username","password","login","showRegister","registerUsername","registerPassword","displayName","register","showLogin","loginStatus","registerStatus","inviteButton","acceptInvite","rejectInvite","cancelInvite","submit","clear","remove","leave","replay","back"};
+        String[] controls={"helpButton","username","password","login","showRegister","registerUsername","registerPassword","displayName","register","showLogin","loginStatus","registerStatus","inviteButton","acceptInvite","rejectInvite","cancelInvite","submit","clear","remove","leave","replay","back"};
         for(String name:controls) {
             Component c=(Component)field(client,name); if(!visibleWithin(c,client)) continue;
             Rectangle area=SwingUtilities.convertRectangle(c.getParent(),c.getBounds(),client);
@@ -254,6 +255,10 @@ public final class UiSmokeTest {
                 screenshot(client, out.resolve("game.png"));
                 screenshot(client, out.resolve("game-small.png"), 1040, 680);
                 screenshot(client, out.resolve("game-compact.png"), 800, 640);
+                JTable feed=(JTable)field(client,"movesTable"); feed.setRowSelectionInterval(0,0);
+                feed.getActionMap().get("recall-guess").actionPerformed(new java.awt.event.ActionEvent(feed,0,"recall-guess"));
+                check(java.util.Arrays.equals(arrangement,new int[]{0,1,2,3,4,5}) && submit.isEnabled(),"History selection loads old sequence without auto-submit");
+                feed.scrollRectToVisible(feed.getCellRect(0,0,true)); resolutions(client,out,"game-recalled");
                 JLabel timer = (JLabel) field(client, "timerLabel");
                 check(timer.getParent().getWidth() >= 96 && timer.getParent().getHeight() >= 96,
                         "Đồng hồ không bị co nhỏ ở cửa sổ 800x640");

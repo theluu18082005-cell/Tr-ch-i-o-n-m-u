@@ -59,6 +59,9 @@ public final class GuiNetworkTest {
                 ((JButton) field(alice, "inviteButton")).doClick(); return null;
             });
             until(() -> ((JPanel) field(bob, "invitationPanel")).isVisible(), "Đối thủ hiển thị lời mời");
+            until(() -> ((InvitationOverlay)field(alice,"invitationOverlay")).isVisible() && ((InvitationOverlay)field(bob,"invitationOverlay")).isVisible()
+                    && ((InvitationOverlay)field(alice,"invitationOverlay")).guardsInstalled() && ((InvitationOverlay)field(bob,"invitationOverlay")).guardsInstalled(),
+                    "Both TCP clients lock their backgrounds while invitation is pending");
             until(() -> ((JPanel) field(alice, "invitationPanel")).isVisible()
                     && ((JButton) field(alice, "cancelInvite")).isEnabled()
                     && !((JButton) field(alice, "inviteButton")).isEnabled(), "Người gửi có thẻ lời mời và không thể mời trùng");
@@ -85,18 +88,43 @@ public final class GuiNetworkTest {
                     && (int)field(alice,"turn")==1 && (int)field(bob,"turn")==1,
                     "Personal note stays on its own TCP client without changing the turn");
             if(!new Store(data).matches.get(0).moves.isEmpty()) throw new AssertionError("Note must not submit a guess to server");
+            until(() -> !((InvitationOverlay)field(alice,"invitationOverlay")).isVisible() && !((InvitationOverlay)field(bob,"invitationOverlay")).isVisible()
+                    && !((InvitationOverlay)field(alice,"invitationOverlay")).guardsInstalled() && !((InvitationOverlay)field(bob,"invitationOverlay")).guardsInstalled(),
+                    "Both clients release modality when match starts");
             String secret = new Store(data).matches.get(0).secret;
             GameClient starter = edt(() -> field(alice,"current").equals("alice") ? alice : bob);
             GameClient next = starter==alice ? bob : alice;
             char[] wrong = secret.toCharArray(); char swap=wrong[0]; wrong[0]=wrong[1]; wrong[1]=swap;
             String firstGuess=new String(wrong);
-            edt(() -> { for(char color:firstGuess.toCharArray()) starter.chooseColor(color-'0'); ((JButton)field(starter,"submit")).doClick(); return null; });
+            edt(() -> {
+                // Use actual Swing transfer handlers, starting from position six.
+                for(int i=5;i>=0;i--) {
+                    JButton from=((JButton[])field(starter,"palette"))[firstGuess.charAt(i)-'0'];
+                    java.lang.reflect.Method create=from.getTransferHandler().getClass().getDeclaredMethod("createTransferable",JComponent.class); create.setAccessible(true);
+                    java.awt.datatransfer.Transferable payload=(java.awt.datatransfer.Transferable)create.invoke(from.getTransferHandler(),from);
+                    JButton to=((JButton[])field(starter,"slots"))[i];
+                    if(!to.getTransferHandler().importData(to,payload)) throw new AssertionError("Unable to drag into slot "+i);
+                }
+                ((JButton)field(starter,"submit")).doClick(); return null;
+            });
             until(() -> (int)field(next,"turn")==2 && Arrays.equals((int[])field(next,"arrangement"),firstGuess.chars().map(c1 -> c1-'0').toArray())
                     && ((JButton)field(next,"submit")).isEnabled(),"Opponent guess prefilled into next client with submit enabled");
             swap=wrong[1]; wrong[1]=wrong[2]; wrong[2]=swap; String secondGuess=new String(wrong);
             edt(() -> { next.clickSlot(1); next.clickSlot(2); ((JButton)field(next,"submit")).doClick(); return null; });
             until(() -> (int)field(starter,"turn")==3 && Arrays.equals((int[])field(starter,"arrangement"),secondGuess.chars().map(c1 -> c1-'0').toArray())
                     && ((JButton)field(starter,"submit")).isEnabled(),"Returning player receives latest opponent order instead of their older guess");
+            edt(() -> {
+                JTable feed=(JTable)field(starter,"movesTable"); feed.setSize(370,216);
+                feed.dispatchEvent(new java.awt.event.MouseEvent(feed,java.awt.event.MouseEvent.MOUSE_CLICKED,System.currentTimeMillis(),0,16,16,1,false,java.awt.event.MouseEvent.BUTTON1)); return null;
+            });
+            until(() -> Arrays.equals((int[])field(starter,"arrangement"),firstGuess.chars().map(ch -> ch-'0').toArray()) && !(boolean)field(starter,"submitted"),
+                    "History click restores own old guess without submitting");
+            if(new Store(data).matches.get(0).moves.size()!=2) throw new AssertionError("Recall must not send a GUESS to server");
+            edt(() -> {
+                JTable feed=(JTable)field(starter,"movesTable"); feed.setRowSelectionInterval(1,1);
+                feed.getActionMap().get("recall-guess").actionPerformed(new java.awt.event.ActionEvent(feed,0,"recall-guess")); return null;
+            });
+            until(() -> Arrays.equals((int[])field(starter,"arrangement"),secondGuess.chars().map(ch -> ch-'0').toArray()),"Enter restores opponent history guess on connected client");
             edt(() -> {
                 GameClient player = field(alice, "current").equals("alice") ? alice : bob;
                 ((JButton)field(player,"clear")).doClick();
