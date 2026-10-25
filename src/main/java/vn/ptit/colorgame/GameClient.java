@@ -7,6 +7,9 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.datatransfer.*;
+import java.awt.dnd.DragSource;
+import java.awt.image.BufferedImage;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -15,6 +18,8 @@ import java.util.List;
 public final class GameClient extends JPanel {
     static { GameTheme.install(); }
     private final AudioManager audio;
+    private final JButton helpButton=button("Hướng dẫn chơi");
+    private JDialog guideDialog;
     private final List<JCheckBox> soundSettings=new ArrayList<>(), musicSettings=new ArrayList<>();
     private final List<JButton> settingsButtons=new ArrayList<>();
     private final JPopupMenu settingsMenu=new JPopupMenu();
@@ -28,6 +33,7 @@ public final class GameClient extends JPanel {
     private int warningSecond=6;
     private final Set<String> audioTimeouts=new HashSet<>();
     private final CardLayout cards = new CardLayout();
+    private final JPanel screens = new JPanel(cards);
     private final JTextField host = new JTextField("127.0.0.1"), port = new JTextField("5000");
     private final JTextField username = new JTextField(), registerUsername = new JTextField(), displayName = new JTextField();
     private final JPasswordField password = new JPasswordField(), registerPassword = new JPasswordField();
@@ -41,9 +47,11 @@ public final class GameClient extends JPanel {
     private final JButton inviteButton = button("Mời thi đấu"), cancelInvite = button("Hủy lời mời");
     private final JButton acceptInvite = button("Chấp nhận"), rejectInvite = button("Từ chối");
     private final GameTheme.RoundPanel invitationPanel = new GameTheme.RoundPanel(20);
+    private final InvitationOverlay invitationOverlay = new InvitationOverlay(screens,invitationPanel);
     private final JLabel invitationLabel = label("", 17, GameTheme.TEXT), invitationTitle = label("Lời mời thi đấu", 13, GameTheme.ACCENT);
     private final JLabel invitationAvatar = new JLabel(), invitationTimer = label("30 s", 19, GameTheme.GOLD);
     private final JLabel invitationDetail = new GameTheme.Notice(" ");
+    private final JLabel invitationHint=label("Chọn phản hồi trước khi thời gian kết thúc",11,GameTheme.MUTED);
     private final JProgressBar invitationProgress = new JProgressBar(0, 1000);
     private final JPanel invitationActions = new JPanel(new CardLayout());
     private final LobbyStyle.OpponentCard opponentCard = new LobbyStyle.OpponentCard(inviteButton);
@@ -91,10 +99,11 @@ public final class GameClient extends JPanel {
     GameClient(AudioManager audio) {
         this.audio=audio;
         buildSettings();
-        setLayout(cards); setBackground(GameTheme.BACKGROUND);
-        add(authView(false), "login"); add(authView(true), "register");
-        add(lobbyView(), "lobby"); add(gameView(), "game");
-        cards.show(this, "login");
+        setLayout(null); setBackground(GameTheme.BACKGROUND); screens.setBackground(GameTheme.BACKGROUND);
+        screens.add(authView(false), "login"); screens.add(authView(true), "register");
+        screens.add(lobbyView(), "lobby"); screens.add(gameView(), "game");
+        add(invitationOverlay); add(screens);
+        cards.show(screens, "login");
         login.addActionListener(e -> authenticate(false)); register.addActionListener(e -> authenticate(true));
         password.addActionListener(e -> authenticate(false));
         registerPassword.addActionListener(e -> authenticate(true));
@@ -105,7 +114,7 @@ public final class GameClient extends JPanel {
         cancelInvite.addActionListener(e -> {
             if (!invitation.isEmpty() && invitationOutgoing && !invitationResponding) {
                 invitationResponding = true; cancelInvite.setEnabled(false);
-                invitationDetail.setText("Đang hủy lời mời…"); send("CANCEL_INVITE", invitation);
+                invitationDetail.setText("Đang hủy lời mời…"); invitationHint.setText("Đang chờ server xác nhận…"); send("CANCEL_INVITE", invitation);
             }
         });
         acceptInvite.addActionListener(e -> respond("YES")); rejectInvite.addActionListener(e -> respond("NO"));
@@ -123,8 +132,12 @@ public final class GameClient extends JPanel {
 
     public void setServer(String address, int number) { host.setText(address); port.setText("" + number); }
 
+    @Override public boolean isOptimizedDrawingEnabled() { return false; }
+
+    @Override public void doLayout() { screens.setBounds(0,0,getWidth(),getHeight()); invitationOverlay.setBounds(0,0,getWidth(),getHeight()); }
+
     @Override public void paint(Graphics g) {
-        Graphics2D p = GameTheme.graphics(g); super.paint(p); celebration.paint(p,getWidth(),getHeight()); p.dispose();
+        Graphics2D p = GameTheme.graphics(g); super.paint(p); if(!invitationOverlay.isVisible()) celebration.paint(p,getWidth(),getHeight()); p.dispose();
     }
 
     private JPanel authView(boolean creating) {
@@ -177,7 +190,7 @@ public final class GameClient extends JPanel {
         generation++; if (connection != null) connection.close(); connection = null;
         registering = creating; password.setText(""); registerPassword.setText("");
         (creating ? registerStatus : loginStatus).setText(creating ? "Mật khẩu cần ít nhất 6 ký tự." : "Nhập IP server để kết nối.");
-        cards.show(this, creating ? "register" : "login");
+        cards.show(screens, creating ? "register" : "login");
         (creating ? registerUsername : username).requestFocusInWindow();
     }
 
@@ -243,6 +256,7 @@ public final class GameClient extends JPanel {
     }
     JPanel settingsComponent() { return settingsPanel; }
     private void showSettings(JButton button) {
+        if(invitationOverlay.isVisible()) return;
         syncAudioSettings(); motionToggle.setSelected(GameTheme.isReducedMotion()); scheduleAudioStatus();
         if(button.isShowing()) settingsMenu.show(button,button.getWidth()-settingsPanel.getPreferredSize().width,button.getHeight()+6);
     }
@@ -270,7 +284,13 @@ public final class GameClient extends JPanel {
 
     private JPanel lobbyView() {
         JPanel page = base(); page.setLayout(new BorderLayout(0, 12));
-        JPanel top=new JPanel(new BorderLayout(0,8)); top.setOpaque(false); top.add(brandBar("Sảnh thách đấu"),BorderLayout.NORTH);
+        JPanel top=new JPanel(new BorderLayout(0,8)); top.setOpaque(false);
+        JPanel lobbyBrand=brandBar("Sảnh thách đấu");
+        Component settings=((BorderLayout)lobbyBrand.getLayout()).getLayoutComponent(BorderLayout.EAST); lobbyBrand.remove(settings);
+        JPanel shortcuts=new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0)); shortcuts.setOpaque(false);
+        ((GameTheme.ActionButton)helpButton).secondary(); helpButton.setName("help-button"); helpButton.setFont(GameTheme.font(12,true)); helpButton.setBorder(new EmptyBorder(5,12,5,12));
+        helpButton.getAccessibleContext().setAccessibleName("Mở hướng dẫn chơi ColorDuel"); helpButton.addActionListener(e -> showGuide());
+        shortcuts.add(helpButton); shortcuts.add(settings); lobbyBrand.add(shortcuts,BorderLayout.EAST); top.add(lobbyBrand,BorderLayout.NORTH);
         JPanel heading=new GameTheme.ArenaBanner(); heading.setLayout(new GridBagLayout()); heading.setBorder(new EmptyBorder(12,16,12,16));
         JPanel copy=vertical(); JLabel arenaTitle=label("MATCHMAKING",22,GameTheme.TEXT); arenaTitle.setFont(GameTheme.display(22)); copy.add(arenaTitle); copy.add(Box.createVerticalStrut(4)); profileLabel.setFont(GameTheme.font(12,false)); copy.add(profileLabel);
         GridBagConstraints header=new GridBagConstraints(); header.gridx=0; header.weightx=1; header.fill=GridBagConstraints.HORIZONTAL; heading.add(copy,header);
@@ -279,7 +299,7 @@ public final class GameClient extends JPanel {
         JPanel session=new JPanel(new BorderLayout(0,4)); session.setOpaque(false); session.add(onlineCount,BorderLayout.NORTH);
         GameTheme.ActionButton logout=new GameTheme.ActionButton("Đăng xuất").quiet(); logout.setBorder(new EmptyBorder(6,12,6,12)); logout.addActionListener(e -> logout()); session.add(logout,BorderLayout.SOUTH);
         header.gridx=2; header.insets=new Insets(0,0,0,0); heading.add(session,header); top.add(heading,BorderLayout.CENTER);
-        buildInvitationCard(); top.add(invitationPanel,BorderLayout.SOUTH); page.add(top,BorderLayout.NORTH);
+        buildInvitationCard(); page.add(top,BorderLayout.NORTH);
         onlineTable.putClientProperty("emptyText", "Chờ người chơi khác kết nối vào cùng server.");
         rankTable.putClientProperty("emptyText", "Hoàn thành trận đấu để tích lũy điểm.");
         pastTable.putClientProperty("emptyText", "Các trận hoàn thành của bạn sẽ xuất hiện tại đây.");
@@ -334,6 +354,23 @@ public final class GameClient extends JPanel {
         updateSelectedOpponent(); return page;
     }
 
+    private void showGuide() {
+        if(invitationOverlay.isVisible() || GraphicsEnvironment.isHeadless()) return;
+        settingsMenu.setVisible(false);
+        if(guideDialog==null || !guideDialog.isDisplayable()) {
+            Window owner=SwingUtilities.getWindowAncestor(this);
+            guideDialog=new JDialog(owner,"Hướng dẫn chơi ColorDuel",Dialog.ModalityType.MODELESS);
+            guideDialog.setName("game-guide-dialog"); guideDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+            GameGuide guide=new GameGuide(this::closeGuide); guideDialog.setContentPane(guide);
+            guideDialog.getRootPane().setDefaultButton(guide.closeButton());
+            int width=owner==null ? getWidth() : owner.getWidth(), height=owner==null ? getHeight() : owner.getHeight();
+            guideDialog.setSize(Math.min(680,Math.max(360,width-48)),Math.min(640,Math.max(320,height-64)));
+            guideDialog.setMinimumSize(new Dimension(360,320)); guideDialog.setLocationRelativeTo(owner);
+        }
+        guideDialog.setVisible(true); guideDialog.toFront();
+    }
+    private void closeGuide() { if(guideDialog!=null) { guideDialog.dispose(); guideDialog=null; } }
+
     private static JPanel tableSection(String title, String detail, JTable table) {
         GameTheme.RoundPanel panel = new GameTheme.RoundPanel(16); panel.setLayout(new BorderLayout(0, 18)); panel.setBorder(new EmptyBorder(12, 16, 12, 16));
         JPanel heading = vertical(); heading.add(label(title, 22, GameTheme.TEXT)); heading.add(Box.createVerticalStrut(8)); heading.add(label(detail, 13, GameTheme.MUTED));
@@ -341,17 +378,21 @@ public final class GameClient extends JPanel {
     }
 
     private void buildInvitationCard() {
-        invitationPanel.setName("invitation-priority"); invitationPanel.setLayout(new BorderLayout(20,4)); invitationPanel.setBorder(new EmptyBorder(10,16,10,16)); invitationPanel.setEdge(GameTheme.PINK);
-        JPanel copy=new JPanel(new BorderLayout(10,4)); copy.setOpaque(false);
-        invitationAvatar.setPreferredSize(new Dimension(38,38)); copy.add(invitationAvatar,BorderLayout.WEST);
-        JPanel identity=new JPanel(new GridLayout(2,1)); identity.setOpaque(false); identity.add(invitationTitle); identity.add(invitationLabel); copy.add(identity,BorderLayout.CENTER); copy.add(invitationTimer,BorderLayout.EAST);
-        invitationPanel.add(copy,BorderLayout.CENTER);
-        JPanel incoming=new JPanel(new GridLayout(1,2,8,0)); incoming.setOpaque(false); ((GameTheme.ActionButton)acceptInvite).primary(); ((GameTheme.ActionButton)rejectInvite).danger(); incoming.add(acceptInvite); incoming.add(rejectInvite);
-        JPanel outgoing=new JPanel(new BorderLayout()); outgoing.setOpaque(false); outgoing.add(cancelInvite,BorderLayout.CENTER);
-        invitationActions.setOpaque(false); invitationActions.add(incoming,"incoming"); invitationActions.add(outgoing,"outgoing"); invitationActions.setPreferredSize(new Dimension(260,44)); invitationPanel.add(invitationActions,BorderLayout.EAST);
-        JPanel lower=new JPanel(new BorderLayout(0,4)); lower.setOpaque(false); invitationDetail.setFont(GameTheme.font(12,false)); invitationDetail.setPreferredSize(new Dimension(1,18)); lower.add(invitationDetail,BorderLayout.CENTER);
-        invitationProgress.setUI(new javax.swing.plaf.basic.BasicProgressBarUI()); invitationProgress.setBorderPainted(false); invitationProgress.setBackground(GameTheme.RAISED); invitationProgress.setForeground(GameTheme.ACCENT); invitationProgress.setPreferredSize(new Dimension(1,3)); lower.add(invitationProgress,BorderLayout.SOUTH); invitationPanel.add(lower,BorderLayout.SOUTH);
-        invitationPanel.setPreferredSize(new Dimension(1,90)); invitationPanel.setVisible(false); cancelInvite.setEnabled(false);
+        invitationPanel.setName("invitation-priority"); invitationPanel.setLayout(new BorderLayout(0,18)); invitationPanel.setBorder(new EmptyBorder(22,24,22,24)); invitationPanel.setEdge(GameTheme.ACCENT);
+        JPanel heading=new JPanel(new BorderLayout(12,0)); heading.setOpaque(false);
+        invitationTitle.setFont(GameTheme.display(20)); invitationTimer.setFont(GameTheme.mono(24)); invitationTimer.setHorizontalAlignment(SwingConstants.RIGHT); invitationTimer.setPreferredSize(new Dimension(90,38));
+        heading.add(invitationTitle,BorderLayout.CENTER); heading.add(invitationTimer,BorderLayout.EAST); invitationPanel.add(heading,BorderLayout.NORTH);
+        JPanel peer=new JPanel(new BorderLayout(16,0)); peer.setOpaque(false); invitationAvatar.setPreferredSize(new Dimension(64,64)); peer.add(invitationAvatar,BorderLayout.WEST);
+        JPanel identity=new JPanel(new BorderLayout(0,8)); identity.setOpaque(false); invitationLabel.setFont(GameTheme.display(25)); identity.add(invitationLabel,BorderLayout.NORTH);
+        invitationDetail.setFont(GameTheme.font(13,false)); invitationDetail.setPreferredSize(new Dimension(1,48)); identity.add(invitationDetail,BorderLayout.CENTER); peer.add(identity,BorderLayout.CENTER); invitationPanel.add(peer,BorderLayout.CENTER);
+        JPanel incoming=new JPanel(new GridLayout(1,2,12,0)); incoming.setOpaque(false); ((GameTheme.ActionButton)acceptInvite).primary().arena(); ((GameTheme.ActionButton)rejectInvite).secondary(); incoming.add(acceptInvite); incoming.add(rejectInvite);
+        JPanel outgoing=new JPanel(new BorderLayout()); outgoing.setOpaque(false); ((GameTheme.ActionButton)cancelInvite).secondary(); outgoing.add(cancelInvite,BorderLayout.CENTER);
+        invitationActions.setOpaque(false); invitationActions.add(incoming,"incoming"); invitationActions.add(outgoing,"outgoing"); invitationActions.setPreferredSize(new Dimension(1,48));
+        JPanel footer=new JPanel(new BorderLayout(0,10)); footer.setOpaque(false); footer.add(invitationActions,BorderLayout.NORTH);
+        JPanel countdown=new JPanel(new BorderLayout(0,6)); countdown.setOpaque(false);
+        invitationProgress.setUI(new javax.swing.plaf.basic.BasicProgressBarUI()); invitationProgress.setBorderPainted(false); invitationProgress.setBackground(GameTheme.RAISED); invitationProgress.setForeground(GameTheme.ACCENT); invitationProgress.setPreferredSize(new Dimension(1,5)); countdown.add(invitationProgress,BorderLayout.NORTH);
+        countdown.add(invitationHint,BorderLayout.CENTER); footer.add(countdown,BorderLayout.SOUTH); invitationPanel.add(footer,BorderLayout.SOUTH);
+        invitationPanel.setPreferredSize(new Dimension(540,300)); invitationPanel.setVisible(false); cancelInvite.setEnabled(false);
     }
 
     private JPanel gameView() {
@@ -372,13 +413,13 @@ public final class GameClient extends JPanel {
         JPanel heading=new JPanel(new BorderLayout()); heading.setOpaque(false);
         turnLabel.setFont(GameTheme.display(20)); heading.add(turnLabel,BorderLayout.CENTER); heading.add(fillLabel,BorderLayout.EAST);
         JPanel boardHead=new JPanel(new BorderLayout(0,0)); boardHead.setOpaque(false); boardHead.add(heading,BorderLayout.NORTH);
-        boardHead.add(label("Phím 1–6 chọn màu  /  Chọn hai ô để đổi vị trí",12,GameTheme.MUTED),BorderLayout.SOUTH); board.add(boardHead,BorderLayout.NORTH);
+        boardHead.add(label("Kéo màu vào ô bất kỳ · Kéo ô để đổi chỗ · Phím 1–6 chọn màu",12,GameTheme.MUTED),BorderLayout.SOUTH); board.add(boardHead,BorderLayout.NORTH);
         JPanel choices=new JPanel(new GridBagLayout()); choices.setOpaque(false);
         JPanel row=new JPanel(new GridLayout(1,6,8,0)); row.setOpaque(false);
-        for(int i=0;i<6;i++) { final int position=i; slots[i]=new GameTheme.ColorSlot(i); slots[i].addActionListener(e -> clickSlot(position)); row.add(slots[i]); }
+        for(int i=0;i<6;i++) { final int position=i; slots[i]=new GameTheme.ColorSlot(i); slots[i].addActionListener(e -> clickSlot(position)); enableColorDrag(slots[i],i,-1); row.add(slots[i]); }
         GridBagConstraints grid=new GridBagConstraints(); grid.gridx=0; grid.gridy=0; grid.weightx=1; grid.weighty=1; grid.fill=GridBagConstraints.BOTH; choices.add(new GameTheme.OrbRack(row),grid);
         JPanel colors=new JPanel(new GridLayout(1,6,8,0)); colors.setOpaque(false);
-        for(int i=0;i<6;i++) { final int color=i; palette[i]=new GameTheme.PaletteButton(i); palette[i].addActionListener(e -> chooseColor(color)); colors.add(palette[i]);
+        for(int i=0;i<6;i++) { final int color=i; palette[i]=new GameTheme.PaletteButton(i); palette[i].addActionListener(e -> chooseColor(color)); enableColorDrag(palette[i],-1,i); colors.add(palette[i]);
             board.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke((char)('1'+i)),"color-"+i);
             board.getActionMap().put("color-"+i,new AbstractAction() { @Override public void actionPerformed(ActionEvent e) { chooseColor(color); } });
         }
@@ -392,10 +433,23 @@ public final class GameClient extends JPanel {
         arenaCards.setOpaque(false); arenaCards.add(board,"board"); arenaCards.add(resultScreen,"result");
 
         GameTheme.RoundPanel history=new GameTheme.RoundPanel(16); history.setName("guess-history"); history.setLayout(new BorderLayout(0,8)); history.setBorder(new EmptyBorder(6,12,6,12));
-        history.add(label("COMBAT LOG  /  Lịch sử lượt đoán",14,GameTheme.TEXT),BorderLayout.NORTH);
+        history.add(label("COMBAT LOG  /  Bấm lượt để dùng lại dãy",14,GameTheme.TEXT),BorderLayout.NORTH);
         movesTable.putClientProperty("emptyHeading","Chưa có lượt đoán");
         movesTable.putClientProperty("emptyText","Dự đoán của cả hai người sẽ xuất hiện tại đây.");
         movesTable.getColumnModel().getColumn(2).setCellRenderer(new SequenceRenderer()); LobbyStyle.configureFeed(movesTable,() -> me);
+        movesTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        movesTable.getAccessibleContext().setAccessibleDescription("Bấm hoặc nhấn Enter trên một lượt đoán để đưa dãy màu lên bàn. Chỉ dùng trong lượt của bạn, trước khi gửi hoặc hết giờ.");
+        movesTable.addMouseListener(new MouseAdapter() {
+            @Override public void mouseClicked(MouseEvent e) { if(SwingUtilities.isLeftMouseButton(e) && e.getClickCount()==1) recallHistoryGuess(movesTable.rowAtPoint(e.getPoint())); }
+            @Override public void mouseExited(MouseEvent e) { movesTable.setCursor(Cursor.getDefaultCursor()); }
+        });
+        movesTable.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override public void mouseMoved(MouseEvent e) { movesTable.setCursor(Cursor.getPredefinedCursor(recallableHistoryRow(movesTable.rowAtPoint(e.getPoint()))>=0 ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR)); }
+        });
+        movesTable.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0),"recall-guess");
+        movesTable.getActionMap().put("recall-guess",new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { recallHistoryGuess(movesTable.getSelectedRow()); }
+        });
         history.add(scrollTable(movesTable),BorderLayout.CENTER); page.add(new GameTheme.ArenaLayout(arenaCards,history),BorderLayout.CENTER);
         JPanel bottom=new JPanel(new BorderLayout(0,4)); bottom.setOpaque(false);
         replayLabel.setVisible(false); replayLabel.addPropertyChangeListener("text",e -> replayLabel.setVisible(!replayLabel.getText().isBlank()));
@@ -485,7 +539,7 @@ public final class GameClient extends JPanel {
                 onlineRows.clear(); onlineModel.setRowCount(0); opponentSearch.setText(""); clearInvitation();
                 updateProfileSummary(m); setAuthenticationEnabled(true);
                 registering = false; username.setText(me); password.setText(""); registerPassword.setText("");
-                cards.show(this, "lobby"); send("RANK"); send("HISTORY");
+                cards.show(screens, "lobby"); send("RANK"); send("HISTORY");
             }
             case "PROFILE" -> {
                 profiles.put(m[1], Arrays.copyOfRange(m, 1, m.length));
@@ -525,12 +579,13 @@ public final class GameClient extends JPanel {
             case "INVITE" -> {
                 showInvitation(m[1], m[2], m[3], false);
                 lobbyStatus.setText(name(m[2]) + " đang mời bạn thi đấu. Chấp nhận để vào phòng.");
-                if (!active) cards.show(this, "lobby");
+                if (!active) cards.show(screens, "lobby");
             }
             case "INVITE_CLOSED" -> {
                 if (invitation.equals(m[1])) clearInvitation(); lobbyStatus.setText(m[2]);
             }
             case "ROOM" -> {
+                closeGuide();
                 resetNotes();
                 setMusicScene(AudioManager.MusicScene.BATTLE);
                 celebration.clear(); audio.stopTransient(); audioTurn=""; warningSecond=6; audioTimeouts.clear();
@@ -541,7 +596,7 @@ public final class GameClient extends JPanel {
                 roomLabel.setText("Phòng " + room.substring(0, 8).toUpperCase(Locale.ROOT));
                 timerLabel.setFont(GameTheme.mono(23)); turnLabel.setForeground(GameTheme.ACCENT);
                 replay.setEnabled(false); back.setEnabled(false); leave.setEnabled(true);
-                clearInvitation(); updatePlayers(); cards.show(this, "game"); updateBoard();
+                clearInvitation(); updatePlayers(); cards.show(screens, "game"); updateBoard();
             }
             case "TURN", "TICK" -> {
                 if (!room.equals(m[1]) || !active) break;
@@ -564,7 +619,7 @@ public final class GameClient extends JPanel {
                 if (active && m[3].equals(current) && !m[3].equals(me)
                         && m[2].equals(Integer.toString(turn)) && m[6].equals("GUESS") && Rules.validGuess(m[4])) {
                     for (int i = 0; i < arrangement.length; i++) arrangement[i] = m[4].charAt(i) - '0';
-                    selectedSlot = -1; updateBoard();
+                    selectedSlot = -1; movesTable.clearSelection(); updateBoard();
                 }
                 if(timeout && audioTimeouts.add(room+":"+m[2]+":"+m[3])) audio.play(AudioManager.Sound.TIMEOUT);
                 movesModel.addRow(new Object[]{m[2], name(m[3]), m[4], timeout ? "-" : m[5] + "/6", timeout ? "Hết " + Rules.TURN_MILLIS / 1000 + " giây" : "Đã gửi"});
@@ -602,10 +657,11 @@ public final class GameClient extends JPanel {
                 if (room.equals(m[1])) { replay.setEnabled(false); replayLabel.setText(m[2]); }
             }
             case "LOBBY" -> {
+                clearInvitation();
                 resetNotes();
                 setMusicScene(AudioManager.MusicScene.LOBBY);
                 celebration.clear();
-                room = ""; active = false; current = ""; cards.show(this, "lobby");
+                room = ""; active = false; current = ""; cards.show(screens, "lobby");
                 lobbyStatus.setText("Chọn một đối thủ sẵn sàng trong danh sách để gửi lời mời.");
                 updateSelectedOpponent(); send("LIST"); refreshTab();
             }
@@ -685,19 +741,30 @@ public final class GameClient extends JPanel {
     }
 
     private void showInvitation(String id, String peer, String seconds, boolean outgoing) {
+        boolean responding=invitation.equals(id) && invitationResponding;
         if(!outgoing && !invitation.equals(id)) audio.play(AudioManager.Sound.INVITE);
-        invitation = id; invitationOutgoing = outgoing; invitationResponding = false; challengePending = false;
+        closeGuide(); settingsMenu.setVisible(false); MenuSelectionManager.defaultManager().clearSelectedPath();
+        closeBackgroundPopups(screens);
+        invitation = id; invitationOutgoing = outgoing; invitationResponding = responding; challengePending = false;
         invitationDuration = Long.parseLong(seconds) * 1_000_000_000L;
         invitationDeadline = System.nanoTime() + invitationDuration;
         String[] profile = profiles.get(peer);
         invitationLabel.setText(profile == null ? peer : profile[1]); invitationLabel.setToolTipText(name(peer));
-        invitationAvatar.setIcon(new GameTheme.Avatar(peer, 38));
+        invitationAvatar.setIcon(new GameTheme.Avatar(peer, 64));
         invitationTitle.setText(outgoing ? "Lời mời đã gửi" : "Bạn được mời thi đấu");
-        invitationDetail.setText("@" + peer + "  ·  " + (outgoing ? "Đang chờ đối thủ chấp nhận." : "1 vs 1  ·  " + Rules.TURN_MILLIS / 1000 + " giây mỗi lượt."));
-        invitationPanel.setEdge(GameTheme.ACCENT);
+        if(!responding) invitationHint.setText(outgoing ? "Bạn có thể hủy lời mời trong khi chờ đối thủ phản hồi" : "Chọn Chấp nhận hoặc Từ chối trước khi hết giờ");
+        if(!responding) invitationDetail.setText("@" + peer + "  ·  " + (outgoing ? "Đang chờ đối thủ chấp nhận." : "1 vs 1  ·  " + Rules.TURN_MILLIS / 1000 + " giây mỗi lượt."));
+        invitationPanel.setEdge(outgoing ? GameTheme.BLUE : GameTheme.ACCENT);
         ((CardLayout) invitationActions.getLayout()).show(invitationActions, outgoing ? "outgoing" : "incoming");
-        acceptInvite.setEnabled(!outgoing); rejectInvite.setEnabled(!outgoing); cancelInvite.setEnabled(outgoing);
-        invitationPanel.setVisible(true); invitationPanel.pulse(); updateInvitationClock(); updateSelectedOpponent();
+        acceptInvite.setEnabled(!outgoing && !responding); rejectInvite.setEnabled(!outgoing && !responding); cancelInvite.setEnabled(outgoing && !responding);
+        invitationPanel.setVisible(true); invitationOverlay.open(); invitationPanel.pulse(); updateInvitationClock(); updateSelectedOpponent();
+    }
+
+    private static void closeBackgroundPopups(Container parent) {
+        for(Component child:parent.getComponents()) {
+            if(child instanceof JComboBox<?> combo) combo.setPopupVisible(false);
+            if(child instanceof Container nested) closeBackgroundPopups(nested);
+        }
     }
 
     private void updateInvitationClock() {
@@ -712,7 +779,7 @@ public final class GameClient extends JPanel {
         if (remaining == 0 && !invitationResponding) {
             acceptInvite.setEnabled(false); rejectInvite.setEnabled(false); cancelInvite.setEnabled(false);
             invitationTitle.setText("Lời mời đã hết hạn"); invitationPanel.setEdge(GameTheme.RED.darker());
-            invitationDetail.setText("Đang chờ server cập nhật trạng thái.");
+            invitationDetail.setText("Đang chờ server cập nhật trạng thái."); invitationHint.setText("Đang chờ server đóng lời mời…");
         }
     }
 
@@ -720,14 +787,14 @@ public final class GameClient extends JPanel {
         if (invitation.isEmpty() || invitationOutgoing || invitationResponding) return;
         if (System.nanoTime() >= invitationDeadline) { updateInvitationClock(); return; }
         audio.play(answer.equals("YES") ? AudioManager.Sound.ACCEPT : AudioManager.Sound.REJECT);
-        invitationResponding = true; invitationDetail.setText(answer.equals("YES") ? "Đang xác nhận vào phòng…" : "Đang từ chối lời mời…");
+        invitationResponding = true; invitationHint.setText("Đang chờ server xác nhận…"); invitationDetail.setText(answer.equals("YES") ? "Đang xác nhận vào phòng…" : "Đang từ chối lời mời…");
         acceptInvite.setEnabled(false); rejectInvite.setEnabled(false); send("RESPOND", invitation, answer);
     }
 
     private void clearInvitation() {
         invitation = ""; invitationDeadline = 0; invitationDuration = 0;
         invitationOutgoing = false; invitationResponding = false; challengePending = false;
-        invitationPanel.setVisible(false); cancelInvite.setEnabled(false); acceptInvite.setEnabled(false); rejectInvite.setEnabled(false);
+        invitationOverlay.close(); invitationPanel.setVisible(false); cancelInvite.setEnabled(false); acceptInvite.setEnabled(false); rejectInvite.setEnabled(false);
         updateSelectedOpponent();
     }
 
@@ -755,6 +822,93 @@ public final class GameClient extends JPanel {
         updateBoard();
     }
 
+    private record ColorMove(GameClient owner,String room,int turn,int source,int color,int[] before) {}
+    private static final DataFlavor COLOR_MOVE=new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType+";class="+ColorMove.class.getName(),"ColorDuel orb");
+
+    private void enableColorDrag(JButton button,int source,int color) {
+        button.setTransferHandler(new ColorTransfer(source,color));
+        MouseAdapter gesture=new MouseAdapter() {
+            private Point pressed;
+            private boolean exported;
+            @Override public void mousePressed(MouseEvent e) { pressed=SwingUtilities.isLeftMouseButton(e) ? e.getPoint() : null; exported=false; }
+            @Override public void mouseReleased(MouseEvent e) { pressed=null; }
+            @Override public void mouseDragged(MouseEvent e) {
+                if(pressed==null || exported || !button.isEnabled() || !myTurn() || !SwingUtilities.isLeftMouseButton(e)) return;
+                if(pressed.distance(e.getPoint())<DragSource.getDragThreshold()) return;
+                exported=true; button.getModel().setArmed(false); button.getModel().setPressed(false);
+                button.getTransferHandler().exportAsDrag(button,e,TransferHandler.MOVE);
+            }
+        };
+        button.addMouseListener(gesture); button.addMouseMotionListener(gesture);
+    }
+    private void clearDropHighlights() {
+        for(JButton slot:slots) if(slot instanceof GameTheme.ColorSlot orb) orb.highlightDrop(false);
+    }
+    private ColorMove validColorMove(Transferable transfer,int target) {
+        if(!myTurn() || target<0 || target>=arrangement.length || transfer==null || !transfer.isDataFlavorSupported(COLOR_MOVE)) return null;
+        try {
+            Object data=transfer.getTransferData(COLOR_MOVE);
+            if(!(data instanceof ColorMove move) || move.owner()!=this || !room.equals(move.room()) || turn!=move.turn()
+                    || !Arrays.equals(arrangement,move.before()) || move.color()<0 || move.color()>=6) return null;
+            if(move.source()>=0) {
+                if(move.source()>=6 || move.source()==target || arrangement[move.source()]!=move.color()) return null;
+            } else for(int used:arrangement) if(used==move.color()) return null;
+            return move;
+        } catch(UnsupportedFlavorException | java.io.IOException unavailable) { return null; }
+    }
+    private final class ColorTransfer extends TransferHandler {
+        private final int source,color;
+        ColorTransfer(int source,int color) { this.source=source; this.color=color; }
+        @Override public int getSourceActions(JComponent c) { return myTurn() ? MOVE : NONE; }
+        @Override protected Transferable createTransferable(JComponent c) {
+            if(!myTurn()) return null;
+            int value=source>=0 ? arrangement[source] : color;
+            if(value<0) return null;
+            if(source<0) for(int used:arrangement) if(used==value) return null;
+            ColorMove move=new ColorMove(GameClient.this,room,turn,source,value,arrangement.clone());
+            BufferedImage image=new BufferedImage(112,112,BufferedImage.TYPE_INT_ARGB); Graphics2D canvas=image.createGraphics(); Graphics2D p=GameTheme.graphics(canvas);
+            GameTheme.orb(p,value,24,24,64); p.dispose(); canvas.dispose(); setDragImage(image); setDragImageOffset(new Point(56,56));
+            return new Transferable() {
+                public DataFlavor[] getTransferDataFlavors() { return new DataFlavor[]{COLOR_MOVE}; }
+                public boolean isDataFlavorSupported(DataFlavor flavor) { return COLOR_MOVE.equals(flavor); }
+                public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                    if(!isDataFlavorSupported(flavor)) throw new UnsupportedFlavorException(flavor); return move;
+                }
+            };
+        }
+        @Override public boolean canImport(TransferSupport support) {
+            clearDropHighlights();
+            boolean accepted=support.isDrop() && source>=0 && validColorMove(support.getTransferable(),source)!=null;
+            if(accepted) { support.setDropAction(MOVE); ((GameTheme.ColorSlot)slots[source]).highlightDrop(true); }
+            return accepted;
+        }
+        @Override public boolean importData(TransferSupport support) {
+            return canImport(support) && importData((JComponent)support.getComponent(),support.getTransferable());
+        }
+        @Override public boolean importData(JComponent c,Transferable transfer) {
+            ColorMove move=validColorMove(transfer,source); if(move==null) { clearDropHighlights(); return false; }
+            if(move.source()>=0) arrangement[move.source()]=arrangement[source];
+            arrangement[source]=move.color(); selectedSlot=-1; clearDropHighlights();
+            audio.play(move.source()<0 ? AudioManager.Sound.ORB : AudioManager.Sound.SWAP); updateBoard(); return true;
+        }
+        @Override protected void exportDone(JComponent source,Transferable data,int action) { clearDropHighlights(); }
+    }
+
+    private int recallableHistoryRow(int viewRow) {
+        if(!myTurn() || invitationOverlay.isVisible() || viewRow<0 || viewRow>=movesTable.getRowCount()) return -1;
+        int row=movesTable.convertRowIndexToModel(viewRow);
+        Object value=movesModel.getValueAt(row,2);
+        return value instanceof String sequence && Rules.validGuess(sequence) ? row : -1;
+    }
+    private void recallHistoryGuess(int viewRow) {
+        int row=recallableHistoryRow(viewRow); if(row<0) return;
+        String sequence=(String)movesModel.getValueAt(row,2);
+        for(int i=0;i<arrangement.length;i++) arrangement[i]=sequence.charAt(i)-'0';
+        selectedSlot=-1; movesTable.setRowSelectionInterval(viewRow,viewRow);
+        resultLabel.setText("Đã chọn lại dãy lượt "+movesModel.getValueAt(row,0)+". Chỉnh màu rồi bấm Gửi dự đoán.");
+        audio.play(AudioManager.Sound.SWAP); updateBoard();
+    }
+
     private void submitGuess() {
         if (!myTurn()) return;
         StringBuilder guess = new StringBuilder();
@@ -766,6 +920,12 @@ public final class GameClient extends JPanel {
 
     private void updateBoard() {
         boolean enabled = myTurn(), full = true;
+        boolean recallEnabled=enabled && !invitationOverlay.isVisible();
+        if(!Objects.equals(movesTable.getClientProperty("guessRecallEnabled"),recallEnabled)) {
+            movesTable.putClientProperty("guessRecallEnabled",recallEnabled); movesTable.repaint();
+        }
+        if(!recallEnabled) movesTable.setCursor(Cursor.getDefaultCursor());
+        if(!enabled) clearDropHighlights();
         clearNotes.setEnabled(active); for(GameTheme.NoteSlot note:noteSlots) if(note!=null) note.setEnabled(active);
         if(guessBoard!=null) guessBoard.setEdge(submitted ? GameTheme.GOLD : current.equals(me) ? GameTheme.ACCENT : GameTheme.PINK);
         int filled = 0;
@@ -799,10 +959,11 @@ public final class GameClient extends JPanel {
     private void send(String command, String... fields) { if (connection != null) connection.send(command, fields); }
 
     private void disconnected(String message) {
+        closeGuide();
         resetNotes();
         setMusicScene(AudioManager.MusicScene.LOBBY);
         generation++; if (connection != null) connection.close(); connection = null;
-        celebration.clear(); audio.stopTransient(); me = ""; active = false; room = ""; clearInvitation(); cards.show(this, registering ? "register" : "login");
+        celebration.clear(); audio.stopTransient(); me = ""; active = false; room = ""; clearInvitation(); cards.show(screens, registering ? "register" : "login");
         setAuthenticationEnabled(true); (registering ? registerStatus : loginStatus).setText(message);
     }
 
@@ -813,7 +974,7 @@ public final class GameClient extends JPanel {
         shutdown(); frame.dispose();
     }
 
-    void shutdown() { noteMenu.setVisible(false); generation++; settingsMenu.setVisible(false); settingsFeedback.stop(); uiTimer.stop(); celebration.clear(); audio.close(); GameTheme.unregisterRoot(this); if (connection != null) connection.close(); }
+    void shutdown() { invitationOverlay.close(); closeGuide(); noteMenu.setVisible(false); generation++; settingsMenu.setVisible(false); settingsFeedback.stop(); uiTimer.stop(); celebration.clear(); audio.close(); GameTheme.unregisterRoot(this); if (connection != null) connection.close(); }
 
     private static JPanel base() { JPanel p = new GameTheme.Backdrop(); p.setBorder(new EmptyBorder(12, 16, 12, 16)); return p; }
     private static JPanel vertical() {
@@ -868,6 +1029,7 @@ public final class GameClient extends JPanel {
         SwingUtilities.invokeLater(() -> {
             GameTheme.install();
             JFrame frame = new JFrame("Color Duel / Game đoán dãy màu đối kháng");
+            frame.setIconImages(GameLogo.windowIcons());
             GameClient client = new GameClient(); client.setServer(host, port); frame.setContentPane(client);
             frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
             frame.addWindowListener(new WindowAdapter() { @Override public void windowClosing(WindowEvent e) { client.requestClose(frame); } });

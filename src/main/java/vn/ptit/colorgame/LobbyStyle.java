@@ -145,20 +145,22 @@ final class LobbyStyle {
         table.getAccessibleContext().setAccessibleName("Battle feed: mỗi lượt hiển thị người chơi, dãy màu, số đúng và trạng thái.");
     }
     private static final class FeedRenderer extends JPanel implements TableCellRenderer {
-        private final Supplier<String> currentUser; private String turn="",name="",sequence="",score="",state=""; private boolean mine;
+        private final Supplier<String> currentUser; private String turn="",name="",sequence="",score="",state=""; private boolean mine,highlighted,canRecall;
         FeedRenderer(Supplier<String> user) { currentUser=user; setOpaque(false); }
         public Component getTableCellRendererComponent(JTable table,Object value,boolean selected,boolean focus,int row,int column) {
             int r=table.convertRowIndexToModel(row); TableModel m=table.getModel(); turn=value.toString(); name=m.getValueAt(r,1).toString(); sequence=m.getValueAt(r,2).toString(); score=m.getValueAt(r,3).toString(); state=m.getValueAt(r,4).toString();
-            mine=name.endsWith("("+currentUser.get()+")"); setToolTipText("Lượt "+turn+" / "+name+" / "+Rules.colorText(sequence)+" / "+score+" / "+state); return this;
+            mine=name.endsWith("("+currentUser.get()+")"); canRecall=Boolean.TRUE.equals(table.getClientProperty("guessRecallEnabled")) && Rules.validGuess(sequence); highlighted=selected && canRecall;
+            String hint=canRecall ? " / Bấm hoặc Enter để dùng lại dãy màu" : Rules.validGuess(sequence) ? " / Chỉ dùng lại khi đến lượt bạn và chưa gửi" : " / Lượt hết giờ không có dãy để dùng lại";
+            setToolTipText("Lượt "+turn+" / "+name+" / "+Rules.colorText(sequence)+" / "+score+" / "+state+hint); return this;
         }
         @Override protected void paintComponent(Graphics g) {
             Graphics2D p=GameTheme.graphics(g); int w=getWidth(),h=getHeight(); Color tone=mine ? GameTheme.ACCENT : GameTheme.PINK;
-            p.setColor(GameTheme.INPUT); p.fillRoundRect(3,3,w-6,h-6,10,10); p.setColor(GameTheme.LINE); p.drawRoundRect(3,3,w-7,h-7,10,10);
+            p.setColor(highlighted ? GameTheme.SELECTED : GameTheme.INPUT); p.fillRoundRect(3,3,w-6,h-6,10,10); p.setColor(highlighted ? GameTheme.ACCENT : GameTheme.LINE); p.drawRoundRect(3,3,w-7,h-7,10,10);
             p.setColor(tone); p.fillOval(13,13,5,5); p.setFont(GameTheme.font(11,true)); p.drawString(GameTheme.fit("LƯỢT "+turn+" / "+name,p.getFontMetrics(),w-90),26,19);
             p.setFont(GameTheme.mono(16)); p.drawString(score,w-p.getFontMetrics().stringWidth(score)-16,24);
             if(Rules.validGuess(sequence)) for(int i=0;i<6;i++) GameTheme.orb(p,sequence.charAt(i)-'0',14+i*30,34,24);
             else { p.setColor(GameTheme.RED); p.setFont(GameTheme.font(12,true)); p.drawString("Hết thời gian",14,51); }
-            p.setFont(GameTheme.font(10,false)); p.setColor(GameTheme.MUTED); p.drawString(GameTheme.fit(state,p.getFontMetrics(),Math.max(20,w-210)),Math.max(202,w-95),53); p.dispose();
+            p.setFont(GameTheme.font(10,false)); p.setColor(GameTheme.MUTED); p.drawString(GameTheme.fit(canRecall ? "Dùng lại" : state,p.getFontMetrics(),Math.max(20,w-210)),Math.max(202,w-95),53); p.dispose();
         }
     }
 
